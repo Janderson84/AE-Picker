@@ -1,0 +1,2867 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rep Roulette — Team Casino</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&family=Playfair+Display:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════
+   CSS VARIABLES & RESET
+   ═══════════════════════════════════════════ */
+:root {
+  --bg-deep: #0a0e13;
+  --bg-primary: #0f1923;
+  --bg-secondary: #1a2c38;
+  --bg-card: #213743;
+  --bg-elevated: #2f4553;
+  --green-primary: #00e701;
+  --green-dim: #00a651;
+  --green-glow: rgba(0, 231, 1, 0.25);
+  --green-subtle: rgba(0, 231, 1, 0.08);
+  --gold: #f7c948;
+  --gold-glow: rgba(247, 201, 72, 0.3);
+  --red: #ed4f5c;
+  --red-glow: rgba(237, 79, 92, 0.3);
+  --blue: #1475e1;
+  --blue-glow: rgba(20, 117, 225, 0.3);
+  --purple: #9b59b6;
+  --orange: #f39c12;
+  --cyan: #00d4aa;
+  --text-primary: #f0f4f7;
+  --text-secondary: #8a9bae;
+  --text-muted: #557086;
+  --border: rgba(255,255,255,0.06);
+  --border-active: rgba(0, 231, 1, 0.3);
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --shadow-card: 0 4px 24px rgba(0,0,0,0.4);
+  --shadow-glow: 0 0 40px rgba(0, 231, 1, 0.15);
+  --font-display: 'Playfair Display', serif;
+  --font-body: 'Outfit', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { font-size: 16px; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Background noise texture */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ═══════════════════════════════════════════
+   SCROLLBAR
+   ═══════════════════════════════════════════ */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-deep); }
+::-webkit-scrollbar-thumb { background: var(--bg-elevated); border-radius: 3px; }
+
+/* ═══════════════════════════════════════════
+   LAYOUT
+   ═══════════════════════════════════════════ */
+.app { position: relative; z-index: 1; }
+
+.screen { display: none; min-height: 100vh; }
+.screen.active { display: block; }
+
+/* ═══════════════════════════════════════════
+   HEADER / NAV
+   ═══════════════════════════════════════════ */
+.top-bar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 32px;
+  background: rgba(15, 25, 35, 0.85);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.logo-icon {
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(135deg, var(--green-primary), var(--green-dim));
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  box-shadow: 0 0 20px var(--green-glow);
+}
+
+.logo-text {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.25rem;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, var(--text-primary), var(--green-primary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.nav-actions { display: flex; align-items: center; gap: 12px; }
+
+.player-count-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: var(--green-subtle);
+  border: 1px solid var(--border-active);
+  border-radius: 100px;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--green-primary);
+}
+
+.player-count-badge .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--green-primary);
+  box-shadow: 0 0 8px var(--green-primary);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* ═══════════════════════════════════════════
+   BUTTONS
+   ═══════════════════════════════════════════ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: var(--transition);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--green-primary), var(--green-dim));
+  color: var(--bg-deep);
+  box-shadow: 0 4px 20px var(--green-glow);
+}
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 30px rgba(0, 231, 1, 0.4);
+}
+
+.btn-secondary {
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+}
+.btn-secondary:hover {
+  background: var(--bg-elevated);
+  border-color: var(--border-active);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+}
+.btn-ghost:hover {
+  color: var(--text-primary);
+  border-color: var(--text-secondary);
+}
+
+.btn-danger {
+  background: rgba(237, 79, 92, 0.15);
+  color: var(--red);
+  border: 1px solid rgba(237, 79, 92, 0.2);
+}
+.btn-danger:hover {
+  background: rgba(237, 79, 92, 0.25);
+}
+
+.btn-icon {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  font-size: 1.1rem;
+}
+
+/* ═══════════════════════════════════════════
+   LOBBY SCREEN
+   ═══════════════════════════════════════════ */
+.lobby-hero {
+  text-align: center;
+  padding: 60px 32px 40px;
+  position: relative;
+}
+
+.lobby-hero::before {
+  content: '';
+  position: absolute;
+  top: -100px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 600px;
+  height: 400px;
+  background: radial-gradient(ellipse, var(--green-glow), transparent 70%);
+  pointer-events: none;
+}
+
+.lobby-title {
+  font-family: var(--font-display);
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  margin-bottom: 16px;
+  position: relative;
+}
+
+.lobby-title .accent {
+  background: linear-gradient(135deg, var(--green-primary), var(--cyan));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.lobby-subtitle {
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+  font-weight: 300;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+/* Player Setup */
+.player-setup {
+  max-width: 560px;
+  margin: 40px auto;
+  padding: 0 32px;
+}
+
+.setup-card {
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+  box-shadow: var(--shadow-card);
+}
+
+.setup-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.setup-header h3 {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.input-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.input-row input {
+  flex: 1;
+  padding: 12px 16px;
+  background: var(--bg-deep);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  outline: none;
+  transition: var(--transition);
+}
+
+.input-row input:focus {
+  border-color: var(--green-primary);
+  box-shadow: 0 0 0 3px var(--green-glow);
+}
+
+.input-row input::placeholder {
+  color: var(--text-muted);
+}
+
+.player-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 260px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.player-chip {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  transition: var(--transition);
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(-10px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.player-chip:hover {
+  border-color: var(--border-active);
+}
+
+.player-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.8rem;
+  color: var(--bg-deep);
+  flex-shrink: 0;
+}
+
+.player-chip .name {
+  flex: 1;
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+.player-chip .remove-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 1.1rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: var(--transition);
+}
+
+.player-chip .remove-btn:hover {
+  color: var(--red);
+  background: rgba(237, 79, 92, 0.1);
+}
+
+.empty-state {
+  text-align: center;
+  padding: 32px 16px;
+  color: var(--text-muted);
+}
+
+.empty-state .icon { font-size: 2rem; margin-bottom: 8px; }
+.empty-state p { font-size: 0.9rem; }
+
+/* Game Grid */
+.games-section {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 20px 32px 60px;
+}
+
+.section-label {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+
+.game-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.game-card {
+  position: relative;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+  cursor: pointer;
+  transition: var(--transition);
+  overflow: hidden;
+}
+
+.game-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 40%, var(--card-accent, var(--green-glow)));
+  opacity: 0;
+  transition: var(--transition);
+}
+
+.game-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--border-active);
+  box-shadow: var(--shadow-glow);
+}
+.game-card:hover::before { opacity: 1; }
+
+.game-card[data-game="plinko"] { --card-accent: rgba(0, 231, 1, 0.08); }
+.game-card[data-game="wheel"] { --card-accent: rgba(247, 201, 72, 0.08); }
+.game-card[data-game="blackjack"] { --card-accent: rgba(20, 117, 225, 0.08); }
+.game-card[data-game="slots"] { --card-accent: rgba(155, 89, 182, 0.08); }
+.game-card[data-game="dice"] { --card-accent: rgba(243, 156, 18, 0.08); }
+.game-card[data-game="war"] { --card-accent: rgba(231, 76, 60, 0.08); }
+.game-card[data-game="horses"] { --card-accent: rgba(0, 212, 170, 0.08); }
+.game-card[data-game="coinflip"] { --card-accent: rgba(241, 196, 15, 0.08); }
+.game-card[data-game="dond"] { --card-accent: rgba(230, 126, 34, 0.08); }
+.game-card[data-game="roulette"] { --card-accent: rgba(237, 79, 92, 0.08); }
+.game-card[data-game="mines"] { --card-accent: rgba(52, 152, 219, 0.08); }
+.game-card[data-game="scratch"] { --card-accent: rgba(26, 188, 156, 0.08); }
+.game-card[data-game="keno"] { --card-accent: rgba(142, 68, 173, 0.08); }
+.game-card[data-game="holdem"] { --card-accent: rgba(39, 174, 96, 0.08); }
+.game-card[data-game="baccarat"] { --card-accent: rgba(192, 57, 43, 0.08); }
+
+.game-card-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  margin-bottom: 20px;
+  position: relative;
+  z-index: 1;
+}
+
+.game-card[data-game="plinko"] .game-card-icon {
+  background: linear-gradient(135deg, rgba(0, 231, 1, 0.2), rgba(0, 231, 1, 0.05));
+  border: 1px solid rgba(0, 231, 1, 0.2);
+}
+.game-card[data-game="wheel"] .game-card-icon {
+  background: linear-gradient(135deg, rgba(247, 201, 72, 0.2), rgba(247, 201, 72, 0.05));
+  border: 1px solid rgba(247, 201, 72, 0.2);
+}
+.game-card[data-game="blackjack"] .game-card-icon {
+  background: linear-gradient(135deg, rgba(20, 117, 225, 0.2), rgba(20, 117, 225, 0.05));
+  border: 1px solid rgba(20, 117, 225, 0.2);
+}
+
+.game-card h3 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  position: relative;
+  z-index: 1;
+}
+
+.game-card p {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  position: relative;
+  z-index: 1;
+}
+
+.game-card .min-players {
+  display: inline-block;
+  margin-top: 14px;
+  padding: 4px 10px;
+  background: var(--bg-card);
+  border-radius: 100px;
+  font-size: 0.75rem;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+  position: relative;
+  z-index: 1;
+}
+
+/* ═══════════════════════════════════════════
+   GAME SCREENS - SHARED
+   ═══════════════════════════════════════════ */
+.game-screen {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.game-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 32px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(15, 25, 35, 0.6);
+}
+
+.game-header h2 {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-weight: 800;
+}
+
+.game-body {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+}
+
+/* ═══════════════════════════════════════════
+   WINNER OVERLAY
+   ═══════════════════════════════════════════ */
+.winner-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: radial-gradient(ellipse at center, rgba(10, 14, 19, 0.72) 0%, rgba(10, 14, 19, 0.45) 100%);
+  backdrop-filter: blur(3px);
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+
+.winner-overlay.active {
+  display: flex;
+  animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.winner-content {
+  text-align: center;
+  animation: winnerPop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes winnerPop {
+  from { transform: scale(0.5); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.winner-label {
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--gold);
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.winner-name {
+  font-family: var(--font-display);
+  font-size: clamp(3rem, 8vw, 6rem);
+  font-weight: 900;
+  line-height: 1;
+  margin-bottom: 8px;
+  background: linear-gradient(135deg, var(--gold), #fff, var(--gold));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 30px var(--gold-glow));
+}
+
+.winner-sub {
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+  margin-bottom: 40px;
+}
+
+.winner-actions { display: flex; gap: 12px; justify-content: center; }
+
+/* Confetti canvas */
+#confetti-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  pointer-events: none;
+}
+
+/* ═══════════════════════════════════════════
+   PLINKO
+   ═══════════════════════════════════════════ */
+.plinko-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  width: 100%;
+  max-width: 700px;
+}
+
+#plinko-canvas {
+  border-radius: var(--radius-lg);
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-card);
+}
+
+.plinko-buckets {
+  display: flex;
+  gap: 2px;
+  width: 100%;
+  max-width: 620px;
+}
+
+.plinko-bucket {
+  flex: 1;
+  text-align: center;
+  padding: 8px 4px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 600;
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: var(--transition);
+}
+
+.plinko-bucket.highlight {
+  background: var(--green-primary);
+  color: var(--bg-deep);
+  box-shadow: 0 0 20px var(--green-glow);
+}
+
+.plinko-controls {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+/* ═══════════════════════════════════════════
+   WHEEL
+   ═══════════════════════════════════════════ */
+.wheel-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 32px;
+}
+
+.wheel-stage {
+  position: relative;
+  width: 460px;
+  height: 460px;
+}
+
+#wheel-canvas {
+  width: 460px;
+  height: 460px;
+  filter: drop-shadow(0 0 40px rgba(0,0,0,0.5));
+}
+
+.wheel-pointer {
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 16px solid transparent;
+  border-right: 16px solid transparent;
+  border-top: 36px solid var(--gold);
+  filter: drop-shadow(0 4px 12px var(--gold-glow));
+  z-index: 10;
+}
+
+.wheel-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 64px;
+  height: 64px;
+  background: linear-gradient(135deg, var(--bg-card), var(--bg-elevated));
+  border: 3px solid var(--gold);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  z-index: 10;
+  box-shadow: 0 0 20px rgba(0,0,0,0.5);
+}
+
+/* ═══════════════════════════════════════════
+   BLACKJACK
+   ═══════════════════════════════════════════ */
+.blackjack-container {
+  width: 100%;
+  max-width: 960px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.bj-table {
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+  box-shadow: var(--shadow-card);
+  position: relative;
+  overflow: hidden;
+}
+
+.bj-table::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, rgba(0, 166, 81, 0.06), transparent 70%);
+  pointer-events: none;
+}
+
+.bj-dealer-section, .bj-players-section {
+  position: relative;
+  z-index: 1;
+}
+
+.bj-section-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+  font-weight: 600;
+  margin-bottom: 14px;
+}
+
+.bj-dealer-hand {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 28px;
+  min-height: 110px;
+  align-items: flex-start;
+}
+
+.bj-players-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 14px;
+}
+
+.bj-player-slot {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  transition: var(--transition);
+}
+
+.bj-player-slot.active-turn {
+  border-color: var(--green-primary);
+  box-shadow: 0 0 20px var(--green-glow);
+}
+
+.bj-player-slot.busted {
+  opacity: 0.5;
+  border-color: var(--red);
+}
+
+.bj-player-slot.winner {
+  border-color: var(--gold);
+  box-shadow: 0 0 20px var(--gold-glow);
+}
+
+.bj-player-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.bj-player-info .name {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.bj-player-info .score {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--green-primary);
+}
+
+.bj-player-info .score.bust {
+  color: var(--red);
+}
+
+.bj-hand {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  min-height: 70px;
+}
+
+.bj-status {
+  margin-top: 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.bj-status.standing { color: var(--gold); }
+.bj-status.busted { color: var(--red); }
+
+/* Playing cards */
+.card {
+  width: 52px;
+  height: 74px;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 0.85rem;
+  line-height: 1;
+  position: relative;
+  animation: dealCard 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  flex-shrink: 0;
+}
+
+@keyframes dealCard {
+  from { transform: translateY(-40px) rotate(-10deg); opacity: 0; }
+  to { transform: translateY(0) rotate(0); opacity: 1; }
+}
+
+.card.face-up {
+  background: linear-gradient(145deg, #fff, #e8e8e8);
+  color: #1a1a2e;
+  border: 1px solid rgba(0,0,0,0.1);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+.card.face-up.red { color: #cc1100; }
+
+.card.face-down {
+  background: linear-gradient(135deg, var(--blue), #0a3a7a);
+  border: 1px solid rgba(255,255,255,0.1);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+.card.face-down::after {
+  content: '♠';
+  font-size: 1.4rem;
+  color: rgba(255,255,255,0.15);
+}
+
+.card .suit {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.bj-controls {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.bj-message {
+  text-align: center;
+  font-size: 1rem;
+  color: var(--text-secondary);
+  padding: 12px;
+  background: var(--bg-card);
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+}
+
+/* ═══════════════════════════════════════════
+   NEW GAMES - SHARED STYLES
+   ═══════════════════════════════════════════ */
+.game-center { display:flex; flex-direction:column; align-items:center; gap:24px; width:100%; max-width:800px; }
+.game-panel { background:var(--bg-primary); border:1px solid var(--border); border-radius:var(--radius-lg); padding:24px; box-shadow:var(--shadow-card); width:100%; }
+.game-status { text-align:center; font-size:1rem; color:var(--text-secondary); padding:12px; background:var(--bg-card); border-radius:var(--radius-sm); font-weight:500; width:100%; }
+.game-actions { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
+
+/* Slots */
+.slots-reels { display:flex; gap:8px; justify-content:center; }
+.slots-reel { width:140px; height:120px; overflow:hidden; background:var(--bg-deep); border:2px solid var(--border); border-radius:var(--radius-md); position:relative; }
+.slots-reel-inner { transition: transform 0.1s linear; }
+.slots-reel-item { height:120px; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:1.1rem; color:var(--text-primary); }
+.slots-reel.spinning .slots-reel-inner { transition:none; }
+
+/* Dice */
+.dice-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:12px; width:100%; }
+.dice-player { background:var(--bg-secondary); border:1px solid var(--border); border-radius:var(--radius-md); padding:16px; text-align:center; transition:var(--transition); }
+.dice-player.winner { border-color:var(--gold); box-shadow:0 0 20px var(--gold-glow); }
+.dice-player .pname { font-weight:600; font-size:0.9rem; margin-bottom:8px; }
+.dice-faces { display:flex; gap:8px; justify-content:center; margin-bottom:8px; }
+.dice-face { width:48px; height:48px; background:#fff; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:1.4rem; font-weight:900; color:var(--bg-deep); box-shadow:0 2px 6px rgba(0,0,0,0.3); }
+.dice-total { font-family:var(--font-mono); font-weight:700; color:var(--green-primary); font-size:1.1rem; }
+
+/* War */
+.war-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(120px,1fr)); gap:12px; width:100%; }
+.war-slot { background:var(--bg-secondary); border:1px solid var(--border); border-radius:var(--radius-md); padding:16px; text-align:center; transition:var(--transition); }
+.war-slot.winner { border-color:var(--gold); box-shadow:0 0 20px var(--gold-glow); }
+.war-slot.loser { opacity:0.4; }
+.war-slot .pname { font-weight:600; font-size:0.85rem; margin-bottom:10px; }
+.war-slot .card { margin:0 auto; }
+
+/* Horse Race - Oval Track */
+.race-oval-wrap {
+  width: 420px; height: 280px; position: relative; margin: 0 auto;
+}
+.race-oval-surface {
+  position: absolute; inset: 0; border-radius: 50%;
+  background: #3a3a3a;
+  border: 3px solid #555;
+  box-shadow: inset 0 0 30px rgba(0,0,0,0.5), 0 4px 20px rgba(0,0,0,0.3);
+}
+.race-lane-marking {
+  position: absolute; border-radius: 50%; border: 1px dashed rgba(255,255,255,0.15);
+  top: 50%; left: 50%; transform: translate(-50%, -50%);
+}
+.race-oval-inner {
+  position: absolute; top: 50%; left: 50%;
+  width: 52%; height: 44%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: #2d5a2d;
+  border: 2px dashed rgba(255,255,255,0.2);
+  box-shadow: inset 0 0 20px rgba(0,0,0,0.3);
+}
+.race-start-line {
+  position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+  width: 28%; height: 6px;
+  background: repeating-linear-gradient(90deg, #fff 0 4px, #222 4px 8px);
+  border-radius: 0 0 2px 2px; z-index: 2;
+}
+.race-horse {
+  position: absolute; font-size: 1.5rem; z-index: 5;
+  transform: translate(-50%, -50%);
+  transition: none;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));
+  line-height: 1;
+}
+.race-legend {
+  display: flex; flex-wrap: wrap; justify-content: center; gap: 10px 18px;
+  margin-top: 14px; font-size: 0.78rem;
+}
+.race-legend-item {
+  display: flex; align-items: center; gap: 5px; opacity: 0.85;
+}
+.race-legend-dot {
+  width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+}
+
+/* Coin Flip */
+.bracket-round { display:flex; flex-direction:column; gap:8px; align-items:center; margin-bottom:20px; }
+.bracket-match { display:flex; align-items:center; gap:8px; background:var(--bg-secondary); border:1px solid var(--border); border-radius:var(--radius-md); padding:10px 16px; }
+.bracket-vs { color:var(--text-muted); font-size:0.75rem; font-weight:600; }
+.bracket-name { font-weight:600; font-size:0.9rem; padding:4px 8px; border-radius:4px; }
+.bracket-name.winner { background:var(--green-primary); color:var(--bg-deep); }
+.bracket-name.loser { opacity:0.3; text-decoration:line-through; }
+.bracket-name.bye { color:var(--text-muted); font-style:italic; }
+.coin { width:64px; height:64px; border-radius:50%; background:linear-gradient(135deg,var(--gold),#d4a017); display:flex; align-items:center; justify-content:center; font-size:1.8rem; margin:0 auto 16px; box-shadow:0 4px 20px var(--gold-glow); }
+.coin.flipping { animation:coinFlip 0.15s linear infinite; }
+@keyframes coinFlip { 0%{transform:rotateY(0)} 50%{transform:rotateY(90deg)} 100%{transform:rotateY(180deg)} }
+
+/* Deal or No Deal */
+.dond-cases { display:grid; grid-template-columns:repeat(auto-fill,minmax(80px,1fr)); gap:8px; width:100%; }
+.dond-case { aspect-ratio:1; background:linear-gradient(135deg,var(--bg-card),var(--bg-elevated)); border:2px solid var(--border); border-radius:var(--radius-md); display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer; transition:var(--transition); font-weight:700; font-size:0.85rem; }
+.dond-case:hover:not(.opened):not(.yours) { border-color:var(--gold); transform:scale(1.05); }
+.dond-case.opened { opacity:0.25; cursor:default; border-color:transparent; }
+.dond-case.yours { border-color:var(--green-primary); box-shadow:0 0 15px var(--green-glow); cursor:default; }
+.dond-case .case-num { font-family:var(--font-mono); font-size:1.2rem; }
+.dond-case .case-label { font-size:0.6rem; color:var(--text-muted); margin-top:4px; }
+
+/* Russian Roulette */
+.rr-chamber { width:160px; height:160px; border-radius:50%; border:4px solid var(--bg-elevated); background:var(--bg-card); margin:0 auto 20px; display:flex; align-items:center; justify-content:center; font-size:3rem; position:relative; }
+.rr-chamber.spinning { animation:rrSpin 0.1s linear infinite; }
+@keyframes rrSpin { to { transform:rotate(360deg); } }
+.rr-players { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; }
+.rr-player { padding:8px 14px; background:var(--bg-secondary); border:1px solid var(--border); border-radius:var(--radius-sm); font-weight:600; font-size:0.85rem; transition:var(--transition); }
+.rr-player.active { border-color:var(--green-primary); box-shadow:0 0 12px var(--green-glow); }
+.rr-player.eliminated { opacity:0.25; text-decoration:line-through; border-color:var(--red); }
+
+/* Mines */
+.mines-grid { display:grid; grid-template-columns:repeat(6,1fr); gap:6px; max-width:360px; margin:0 auto; }
+.mines-tile { aspect-ratio:1; background:var(--bg-card); border:2px solid var(--border); border-radius:var(--radius-sm); display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:1.3rem; transition:var(--transition); }
+.mines-tile:hover:not(.revealed) { border-color:var(--green-primary); transform:scale(1.05); }
+.mines-tile.revealed { cursor:default; }
+.mines-tile.safe { background:var(--green-dim); border-color:var(--green-primary); }
+.mines-tile.mine { background:var(--red); border-color:#ff6b6b; animation:shake 0.4s ease; }
+@keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-4px)} 75%{transform:translateX(4px)} }
+
+/* Scratch Cards */
+.scratch-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(130px,1fr)); gap:12px; width:100%; }
+.scratch-card { background:var(--bg-secondary); border:2px solid var(--border); border-radius:var(--radius-md); padding:16px; text-align:center; cursor:pointer; transition:var(--transition); min-height:120px; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+.scratch-card:hover:not(.scratched) { border-color:var(--gold); transform:scale(1.03); }
+.scratch-card .pname { font-weight:600; font-size:0.85rem; margin-bottom:8px; }
+.scratch-card .scratch-cover { background:linear-gradient(135deg,#666,#888,#666); color:#999; padding:12px; border-radius:6px; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; }
+.scratch-card.scratched .scratch-cover { display:none; }
+.scratch-card .scratch-prize { display:none; font-family:var(--font-mono); font-size:1.5rem; font-weight:900; }
+.scratch-card.scratched .scratch-prize { display:block; }
+.scratch-card.scratched.winner { border-color:var(--gold); box-shadow:0 0 20px var(--gold-glow); }
+
+/* Keno */
+.keno-board { display:grid; grid-template-columns:repeat(8,1fr); gap:4px; max-width:400px; margin:0 auto; }
+.keno-num { aspect-ratio:1; display:flex; align-items:center; justify-content:center; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-sm); font-family:var(--font-mono); font-weight:700; font-size:0.8rem; transition:var(--transition); }
+.keno-num.drawn { background:var(--gold); color:var(--bg-deep); border-color:var(--gold); }
+.keno-num.player-num { border-color:var(--green-primary); box-shadow:inset 0 0 8px var(--green-glow); }
+.keno-num.drawn.player-num { background:var(--green-primary); border-color:var(--green-primary); }
+.keno-players { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-top:16px; }
+.keno-player { padding:8px 12px; background:var(--bg-secondary); border:1px solid var(--border); border-radius:var(--radius-sm); font-size:0.8rem; }
+.keno-player .kp-name { font-weight:600; margin-bottom:4px; }
+.keno-player .kp-nums { font-family:var(--font-mono); font-size:0.75rem; color:var(--text-muted); }
+.keno-player .kp-nums .matched { color:var(--green-primary); font-weight:700; }
+.keno-player.winner { border-color:var(--gold); box-shadow:0 0 15px var(--gold-glow); }
+
+/* Baccarat */
+.bacc-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:12px; width:100%; }
+.bacc-slot { background:var(--bg-secondary); border:1px solid var(--border); border-radius:var(--radius-md); padding:16px; text-align:center; transition:var(--transition); }
+.bacc-slot.winner { border-color:var(--gold); box-shadow:0 0 20px var(--gold-glow); }
+.bacc-slot .pname { font-weight:600; font-size:0.9rem; margin-bottom:10px; }
+.bacc-hand { display:flex; gap:6px; justify-content:center; margin-bottom:8px; }
+.bacc-score { font-family:var(--font-mono); font-weight:700; font-size:1.2rem; color:var(--green-primary); }
+
+/* Hold'em */
+.holdem-community { display:flex; gap:8px; justify-content:center; margin:16px 0; min-height:80px; align-items:center; }
+.holdem-community .card { transition: all 0.3s ease; }
+.holdem-players-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:12px; }
+.holdem-slot { background:var(--bg-secondary); border:1px solid var(--border); border-radius:var(--radius-md); padding:14px; text-align:center; transition:var(--transition); }
+.holdem-slot.winner { border-color:var(--gold); box-shadow:0 0 20px var(--gold-glow); }
+.holdem-slot .pname { font-weight:600; font-size:0.85rem; margin-bottom:8px; }
+.holdem-slot .hand-rank { font-size:0.7rem; color:var(--gold); font-weight:600; text-transform:uppercase; margin-top:6px; }
+
+/* Category labels in lobby */
+.category-label { grid-column:1/-1; font-size:0.7rem; text-transform:uppercase; letter-spacing:0.15em; color:var(--text-muted); font-weight:600; margin-top:12px; padding-bottom:4px; border-bottom:1px solid var(--border); }
+
+/* ═══════════════════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════════════════ */
+@media (max-width: 640px) {
+  .top-bar { padding: 10px 16px; }
+  .lobby-hero { padding: 40px 16px 24px; }
+  .player-setup { padding: 0 16px; }
+  .games-section { padding: 20px 16px 40px; }
+  .game-header { padding: 12px 16px; }
+  .game-body { padding: 16px; }
+  .wheel-stage, #wheel-canvas { width: 320px; height: 320px; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- ═══════════ TOP BAR ═══════════ -->
+  <div class="top-bar">
+    <div class="logo" onclick="showScreen('lobby')">
+      <div class="logo-icon">🎰</div>
+      <div class="logo-text">Rep Roulette</div>
+    </div>
+    <div class="nav-actions">
+      <div class="player-count-badge">
+        <span class="dot"></span>
+        <span id="nav-player-count">0 players</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ LOBBY SCREEN ═══════════ -->
+  <div id="screen-lobby" class="screen active">
+    <div class="lobby-hero">
+      <h1 class="lobby-title">
+        Pick Your <span class="accent">Rep</span><br>Casino Style
+      </h1>
+      <p class="lobby-subtitle">Add your team members, choose a game, and let fate decide who gets the spotlight.</p>
+    </div>
+
+    <div class="player-setup">
+      <div class="setup-card">
+        <div class="setup-header">
+          <h3>Team Members</h3>
+          <button class="btn btn-ghost" style="padding: 6px 12px; font-size: 0.75rem;" onclick="clearAllPlayers()">Clear All</button>
+        </div>
+        <div class="input-row">
+          <input type="text" id="player-name-input" placeholder="Enter a name..." onkeydown="if(event.key==='Enter') addPlayer()">
+          <button class="btn btn-primary" onclick="addPlayer()">Add</button>
+        </div>
+        <div class="player-list" id="player-list">
+          <div class="empty-state">
+            <div class="icon">👥</div>
+            <p>Add at least 2 team members to get started</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="games-section">
+      <div class="section-label">Choose a Game</div>
+      <div class="game-grid">
+        <div class="game-card" data-game="plinko" onclick="launchGame('plinko')">
+          <div class="game-card-icon">📍</div>
+          <h3>Plinko</h3>
+          <p>Drop the chip and watch it bounce through the pegs. Wherever it lands, that's your rep!</p>
+          <span class="min-players">MIN 2 PLAYERS</span>
+        </div>
+        <div class="game-card" data-game="wheel" onclick="launchGame('wheel')">
+          <div class="game-card-icon">🎡</div>
+          <h3>Wheel of Fortune</h3>
+          <p>Spin the wheel with everyone's name on it. Classic, dramatic, and always a crowd pleaser.</p>
+          <span class="min-players">MIN 2 PLAYERS</span>
+        </div>
+        <div class="game-card" data-game="blackjack" onclick="launchGame('blackjack')">
+          <div class="game-card-icon">🃏</div>
+          <h3>Blackjack</h3>
+          <p>Everyone plays a hand against the dealer. Closest to 21 without busting wins the spotlight.</p>
+          <span class="min-players">MIN 2 PLAYERS</span>
+        </div>
+        <div class="game-card" data-game="slots" onclick="launchGame('slots')">
+          <div class="game-card-icon" style="background:linear-gradient(135deg,rgba(155,89,182,0.2),rgba(155,89,182,0.05));border:1px solid rgba(155,89,182,0.2)">🎰</div>
+          <h3>Slot Machine</h3>
+          <p>Pull the lever and watch the reels spin. When they stop, the name across all three wins.</p>
+          <span class="min-players">MIN 2 PLAYERS</span>
+        </div>
+        <div class="game-card" data-game="dice" onclick="launchGame('dice')">
+          <div class="game-card-icon" style="background:linear-gradient(135deg,rgba(243,156,18,0.2),rgba(243,156,18,0.05));border:1px solid rgba(243,156,18,0.2)">🎲</div>
+          <h3>Dice Duel</h3>
+          <p>Everyone rolls two dice at once. Highest total takes the crown. Pure luck, no skill needed.</p>
+          <span class="min-players">MIN 2 PLAYERS</span>
+        </div>
+        <div class="game-card" data-game="war" onclick="launchGame('war')">
+          <div class="game-card-icon" style="background:linear-gradient(135deg,rgba(231,76,60,0.2),rgba(231,76,60,0.05));border:1px solid rgba(231,76,60,0.2)">⚔️</div>
+          <h3>War</h3>
+          <p>Each player flips one card. Highest card wins. Dead simple, fast, and decisive.</p>
+          <span class="min-players">MIN 2 PLAYERS</span>
+        </div>
+        <div class="game-card" data-game="horses" onclick="launchGame('horses')">
+          <div class="game-card-icon" style="background:linear-gradient(135deg,rgba(0,212,170,0.2),rgba(0,212,170,0.05));border:1px solid rgba(0,212,170,0.2)">🏇</div>
+          <h3>Horse Race</h3>
+          <p>Each player's horse races across the track with random bursts of speed. First to the finish line wins!</p>
+          <span class="min-players">MIN 2 PLAYERS</span>
+        </div>
+        <div class="game-card" data-game="coinflip" onclick="launchGame('coinflip')">
+          <div class="game-card-icon" style="background:linear-gradient(135deg,rgba(241,196,15,0.2),rgba(241,196,15,0.05));border:1px solid rgba(241,196,15,0.2)">🪙</div>
+          <h3>Coin Flip Tournament</h3>
+          <p>Bracket-style elimination. Players are paired up, a coin decides each match. Last one standing wins.</p>
+          <span class="min-players">MIN 2 PLAYERS</span>
+        </div>
+        <div class="game-card" data-game="dond" onclick="launchGame('dond')">
+          <div class="game-card-icon" style="background:linear-gradient(135deg,rgba(230,126,34,0.2),rgba(230,126,34,0.05));border:1px solid rgba(230,126,34,0.2)">💼</div>
+          <h3>Deal or No Deal</h3>
+          <p>Each player owns a briefcase. Eliminate cases one by one. The last case standing is your rep!</p>
+          <span class="min-players">MIN 2 PLAYERS</span>
+        </div>
+        <div class="game-card" data-game="roulette" onclick="launchGame('roulette')">
+          <div class="game-card-icon" style="background:linear-gradient(135deg,rgba(237,79,92,0.2),rgba(237,79,92,0.05));border:1px solid rgba(237,79,92,0.2)">🔫</div>
+          <h3>Russian Roulette</h3>
+          <p>Spin the chamber, pull the trigger. Players take turns until only one is left. Nerve-wracking!</p>
+          <span class="min-players">MIN 2 PLAYERS</span>
+        </div>
+        <div class="game-card" data-game="mines" onclick="launchGame('mines')">
+          <div class="game-card-icon" style="background:linear-gradient(135deg,rgba(52,152,219,0.2),rgba(52,152,219,0.05));border:1px solid rgba(52,152,219,0.2)">💣</div>
+          <h3>Minesweeper</h3>
+          <p>Players take turns clicking tiles. Hit a mine and you're out. Last player not blown up wins.</p>
+          <span class="min-players">MIN 2 PLAYERS</span>
+        </div>
+        <div class="game-card" data-game="scratch" onclick="launchGame('scratch')">
+          <div class="game-card-icon" style="background:linear-gradient(135deg,rgba(26,188,156,0.2),rgba(26,188,156,0.05));border:1px solid rgba(26,188,156,0.2)">🎫</div>
+          <h3>Scratch Cards</h3>
+          <p>Each player gets a scratch card with a hidden prize. Reveal them all — highest prize wins!</p>
+          <span class="min-players">MIN 2 PLAYERS</span>
+        </div>
+        <div class="game-card" data-game="keno" onclick="launchGame('keno')">
+          <div class="game-card-icon" style="background:linear-gradient(135deg,rgba(142,68,173,0.2),rgba(142,68,173,0.05));border:1px solid rgba(142,68,173,0.2)">🔢</div>
+          <h3>Keno</h3>
+          <p>Each player gets lucky numbers. Numbers are drawn one by one — first to match all their numbers wins.</p>
+          <span class="min-players">MIN 2 PLAYERS</span>
+        </div>
+        <div class="game-card" data-game="holdem" onclick="launchGame('holdem')">
+          <div class="game-card-icon" style="background:linear-gradient(135deg,rgba(39,174,96,0.2),rgba(39,174,96,0.05));border:1px solid rgba(39,174,96,0.2)">🂡</div>
+          <h3>Texas Hold'em</h3>
+          <p>Everyone gets two cards, then community cards are revealed in stages. Best poker hand wins.</p>
+          <span class="min-players">MIN 2 PLAYERS</span>
+        </div>
+        <div class="game-card" data-game="baccarat" onclick="launchGame('baccarat')">
+          <div class="game-card-icon" style="background:linear-gradient(135deg,rgba(192,57,43,0.2),rgba(192,57,43,0.05));border:1px solid rgba(192,57,43,0.2)">🎴</div>
+          <h3>Baccarat</h3>
+          <p>Each player gets two cards. Closest hand total to 9 (mod 10) wins. Elegant and fast.</p>
+          <span class="min-players">MIN 2 PLAYERS</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ PLINKO SCREEN ═══════════ -->
+  <div id="screen-plinko" class="screen">
+    <div class="game-header">
+      <button class="btn btn-icon btn-ghost" onclick="showScreen('lobby')">←</button>
+      <h2>Plinko</h2>
+    </div>
+    <div class="game-body">
+      <div class="plinko-container">
+        <canvas id="plinko-canvas" width="620" height="500"></canvas>
+        <div class="plinko-buckets" id="plinko-buckets"></div>
+        <div class="plinko-controls">
+          <button class="btn btn-primary" id="plinko-drop-btn" onclick="plinkoDrop()">Drop Chip</button>
+          <button class="btn btn-secondary" onclick="plinkoReset()">Reset</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ WHEEL SCREEN ═══════════ -->
+  <div id="screen-wheel" class="screen">
+    <div class="game-header">
+      <button class="btn btn-icon btn-ghost" onclick="showScreen('lobby')">←</button>
+      <h2>Wheel of Fortune</h2>
+    </div>
+    <div class="game-body">
+      <div class="wheel-container">
+        <div class="wheel-stage">
+          <div class="wheel-pointer"></div>
+          <canvas id="wheel-canvas" width="460" height="460"></canvas>
+          <div class="wheel-center">🎯</div>
+        </div>
+        <button class="btn btn-primary" id="wheel-spin-btn" onclick="spinWheel()" style="padding: 14px 40px; font-size: 1rem;">
+          Spin the Wheel
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ BLACKJACK SCREEN ═══════════ -->
+  <div id="screen-blackjack" class="screen">
+    <div class="game-header">
+      <button class="btn btn-icon btn-ghost" onclick="showScreen('lobby')">←</button>
+      <h2>Blackjack</h2>
+    </div>
+    <div class="game-body">
+      <div class="blackjack-container">
+        <div class="bj-table">
+          <div class="bj-dealer-section">
+            <div class="bj-section-label">Dealer</div>
+            <div class="bj-dealer-hand" id="bj-dealer-hand"></div>
+          </div>
+          <div class="bj-players-section">
+            <div class="bj-section-label">Players</div>
+            <div class="bj-players-grid" id="bj-players-grid"></div>
+          </div>
+        </div>
+        <div class="bj-message" id="bj-message">Press Deal to start a round</div>
+        <div class="bj-controls" id="bj-controls">
+          <button class="btn btn-primary" onclick="bjDeal()">Deal</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ SLOTS SCREEN ═══════════ -->
+  <div id="screen-slots" class="screen">
+    <div class="game-header"><button class="btn btn-icon btn-ghost" onclick="showScreen('lobby')">←</button><h2>Slot Machine</h2></div>
+    <div class="game-body"><div class="game-center">
+      <div class="game-panel" style="text-align:center"><div class="slots-reels" id="slots-reels"></div></div>
+      <div class="game-status" id="slots-status">Pull the lever!</div>
+      <div class="game-actions"><button class="btn btn-primary" id="slots-btn" onclick="slotsSpin()" style="padding:14px 40px;font-size:1rem">Pull Lever</button></div>
+    </div></div>
+  </div>
+
+  <!-- ═══════════ DICE SCREEN ═══════════ -->
+  <div id="screen-dice" class="screen">
+    <div class="game-header"><button class="btn btn-icon btn-ghost" onclick="showScreen('lobby')">←</button><h2>Dice Duel</h2></div>
+    <div class="game-body"><div class="game-center">
+      <div class="game-panel"><div class="dice-grid" id="dice-grid"></div></div>
+      <div class="game-status" id="dice-status">Ready to roll!</div>
+      <div class="game-actions"><button class="btn btn-primary" id="dice-btn" onclick="diceRoll()">Roll All Dice</button></div>
+    </div></div>
+  </div>
+
+  <!-- ═══════════ WAR SCREEN ═══════════ -->
+  <div id="screen-war" class="screen">
+    <div class="game-header"><button class="btn btn-icon btn-ghost" onclick="showScreen('lobby')">←</button><h2>War</h2></div>
+    <div class="game-body"><div class="game-center">
+      <div class="game-panel"><div class="war-grid" id="war-grid"></div></div>
+      <div class="game-status" id="war-status">Ready to flip!</div>
+      <div class="game-actions"><button class="btn btn-primary" id="war-btn" onclick="warFlip()">Flip Cards</button></div>
+    </div></div>
+  </div>
+
+  <!-- ═══════════ HORSES SCREEN ═══════════ -->
+  <div id="screen-horses" class="screen">
+    <div class="game-header"><button class="btn btn-icon btn-ghost" onclick="showScreen('lobby')">←</button><h2>Horse Race</h2></div>
+    <div class="game-body"><div class="game-center" style="max-width:600px">
+      <div class="game-panel"><div id="race-track"></div></div>
+      <div class="game-status" id="horses-status">Horses at the gate!</div>
+      <div class="game-actions"><button class="btn btn-primary" id="horses-btn" onclick="horsesStart()">Start Race</button></div>
+    </div></div>
+  </div>
+
+  <!-- ═══════════ COIN FLIP SCREEN ═══════════ -->
+  <div id="screen-coinflip" class="screen">
+    <div class="game-header"><button class="btn btn-icon btn-ghost" onclick="showScreen('lobby')">←</button><h2>Coin Flip Tournament</h2></div>
+    <div class="game-body"><div class="game-center">
+      <div class="coin" id="coin-display">🪙</div>
+      <div class="game-panel" id="coinflip-bracket"></div>
+      <div class="game-status" id="coinflip-status">Ready for the tournament!</div>
+      <div class="game-actions"><button class="btn btn-primary" id="coinflip-btn" onclick="coinflipNext()">Flip Coin</button></div>
+    </div></div>
+  </div>
+
+  <!-- ═══════════ DEAL OR NO DEAL SCREEN ═══════════ -->
+  <div id="screen-dond" class="screen">
+    <div class="game-header"><button class="btn btn-icon btn-ghost" onclick="showScreen('lobby')">←</button><h2>Deal or No Deal</h2></div>
+    <div class="game-body"><div class="game-center">
+      <div class="game-panel"><div class="dond-cases" id="dond-cases"></div></div>
+      <div class="game-status" id="dond-status">Pick a case to eliminate!</div>
+      <div class="game-actions" id="dond-actions"></div>
+    </div></div>
+  </div>
+
+  <!-- ═══════════ RUSSIAN ROULETTE SCREEN ═══════════ -->
+  <div id="screen-roulette" class="screen">
+    <div class="game-header"><button class="btn btn-icon btn-ghost" onclick="showScreen('lobby')">←</button><h2>Russian Roulette</h2></div>
+    <div class="game-body"><div class="game-center">
+      <div class="rr-chamber" id="rr-chamber">🔫</div>
+      <div class="rr-players" id="rr-players"></div>
+      <div class="game-status" id="rr-status">Spin the chamber!</div>
+      <div class="game-actions"><button class="btn btn-primary" id="rr-btn" onclick="rrPull()">Pull Trigger</button></div>
+    </div></div>
+  </div>
+
+  <!-- ═══════════ MINES SCREEN ═══════════ -->
+  <div id="screen-mines" class="screen">
+    <div class="game-header"><button class="btn btn-icon btn-ghost" onclick="showScreen('lobby')">←</button><h2>Minesweeper</h2></div>
+    <div class="game-body"><div class="game-center">
+      <div class="game-panel"><div class="mines-grid" id="mines-grid"></div></div>
+      <div class="game-status" id="mines-status">Pick a tile!</div>
+      <div class="game-actions" id="mines-actions"></div>
+    </div></div>
+  </div>
+
+  <!-- ═══════════ SCRATCH SCREEN ═══════════ -->
+  <div id="screen-scratch" class="screen">
+    <div class="game-header"><button class="btn btn-icon btn-ghost" onclick="showScreen('lobby')">←</button><h2>Scratch Cards</h2></div>
+    <div class="game-body"><div class="game-center">
+      <div class="game-panel"><div class="scratch-grid" id="scratch-grid"></div></div>
+      <div class="game-status" id="scratch-status">Click each card to scratch and reveal!</div>
+    </div></div>
+  </div>
+
+  <!-- ═══════════ KENO SCREEN ═══════════ -->
+  <div id="screen-keno" class="screen">
+    <div class="game-header"><button class="btn btn-icon btn-ghost" onclick="showScreen('lobby')">←</button><h2>Keno</h2></div>
+    <div class="game-body"><div class="game-center">
+      <div class="game-panel"><div class="keno-board" id="keno-board"></div><div class="keno-players" id="keno-players"></div></div>
+      <div class="game-status" id="keno-status">Ready to draw!</div>
+      <div class="game-actions"><button class="btn btn-primary" id="keno-btn" onclick="kenoStart()">Start Drawing</button></div>
+    </div></div>
+  </div>
+
+  <!-- ═══════════ HOLD'EM SCREEN ═══════════ -->
+  <div id="screen-holdem" class="screen">
+    <div class="game-header"><button class="btn btn-icon btn-ghost" onclick="showScreen('lobby')">←</button><h2>Texas Hold'em</h2></div>
+    <div class="game-body"><div class="game-center" style="max-width:960px">
+      <div class="game-panel">
+        <div class="bj-section-label">Community Cards</div>
+        <div class="holdem-community" id="holdem-community"></div>
+        <div class="bj-section-label">Players</div>
+        <div class="holdem-players-grid" id="holdem-grid"></div>
+      </div>
+      <div class="game-status" id="holdem-status">Press Deal to play</div>
+      <div class="game-actions" id="holdem-actions"><button class="btn btn-primary" onclick="holdemDeal()">Deal</button></div>
+    </div></div>
+  </div>
+
+  <!-- ═══════════ BACCARAT SCREEN ═══════════ -->
+  <div id="screen-baccarat" class="screen">
+    <div class="game-header"><button class="btn btn-icon btn-ghost" onclick="showScreen('lobby')">←</button><h2>Baccarat</h2></div>
+    <div class="game-body"><div class="game-center">
+      <div class="game-panel"><div class="bacc-grid" id="bacc-grid"></div></div>
+      <div class="game-status" id="bacc-status">Press Deal to play</div>
+      <div class="game-actions"><button class="btn btn-primary" id="bacc-btn" onclick="baccDeal()">Deal</button></div>
+    </div></div>
+  </div>
+
+  <!-- ═══════════ WINNER OVERLAY ═══════════ -->
+  <canvas id="confetti-canvas"></canvas>
+  <div class="winner-overlay" id="winner-overlay">
+    <div class="winner-content">
+      <div class="winner-label">🏆 Today's Chosen Rep</div>
+      <div class="winner-name" id="winner-name"></div>
+      <div class="winner-sub">Time to shine in the spotlight!</div>
+      <div class="winner-actions">
+        <button class="btn btn-primary" onclick="closeWinner()">Back to Lobby</button>
+        <button class="btn btn-secondary" id="winner-replay-btn">Play Again</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════
+let players = [];
+const COLORS = ['#00e701','#f7c948','#1475e1','#ed4f5c','#9b59b6','#f39c12','#00d4aa','#e74c3c','#3498db','#1abc9c','#e67e22','#c0392b'];
+let currentGame = null;
+
+// ═══════════════════════════════════════════
+// PLAYER MANAGEMENT
+// ═══════════════════════════════════════════
+function getPlayerColor(index) {
+  return COLORS[index % COLORS.length];
+}
+
+function addPlayer() {
+  const input = document.getElementById('player-name-input');
+  const name = input.value.trim();
+  if (!name) return;
+  if (players.find(p => p.name.toLowerCase() === name.toLowerCase())) {
+    input.style.borderColor = 'var(--red)';
+    setTimeout(() => input.style.borderColor = '', 800);
+    return;
+  }
+  players.push({ name, color: getPlayerColor(players.length) });
+  input.value = '';
+  input.focus();
+  renderPlayers();
+}
+
+function removePlayer(index) {
+  players.splice(index, 1);
+  players.forEach((p, i) => p.color = getPlayerColor(i));
+  renderPlayers();
+}
+
+function clearAllPlayers() {
+  players = [];
+  renderPlayers();
+}
+
+function renderPlayers() {
+  const list = document.getElementById('player-list');
+  document.getElementById('nav-player-count').textContent = `${players.length} player${players.length !== 1 ? 's' : ''}`;
+
+  if (players.length === 0) {
+    list.innerHTML = `<div class="empty-state"><div class="icon">👥</div><p>Add at least 2 team members to get started</p></div>`;
+    return;
+  }
+
+  list.innerHTML = players.map((p, i) => `
+    <div class="player-chip">
+      <div class="player-avatar" style="background: ${p.color}">${p.name.charAt(0).toUpperCase()}</div>
+      <span class="name">${escapeHtml(p.name)}</span>
+      <button class="remove-btn" onclick="removePlayer(${i})">×</button>
+    </div>
+  `).join('');
+}
+
+function escapeHtml(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+// ═══════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(`screen-${id}`).classList.add('active');
+}
+
+function launchGame(game) {
+  if (players.length < 2) {
+    const input = document.getElementById('player-name-input');
+    input.placeholder = 'Need at least 2 players!';
+    input.style.borderColor = 'var(--red)';
+    setTimeout(() => {
+      input.placeholder = 'Enter a name...';
+      input.style.borderColor = '';
+    }, 2000);
+    return;
+  }
+  currentGame = game;
+  showScreen(game);
+  const inits = { plinko:initPlinko, wheel:initWheel, blackjack:bjInit, slots:slotsInit, dice:diceInit, war:warInit, horses:horsesInit, coinflip:coinflipInit, dond:dondInit, roulette:rrInit, mines:minesInit, scratch:scratchInit, keno:kenoInit, holdem:holdemInit, baccarat:baccInit };
+  if (inits[game]) inits[game]();
+}
+
+// ═══════════════════════════════════════════
+// WINNER OVERLAY + CONFETTI
+// ═══════════════════════════════════════════
+let confettiPieces = [];
+let confettiAnim = null;
+
+function showWinner(name, replayFn) {
+  document.getElementById('winner-name').textContent = name;
+  const overlay = document.getElementById('winner-overlay');
+  overlay.classList.add('active');
+
+  const replayBtn = document.getElementById('winner-replay-btn');
+  replayBtn.onclick = () => {
+    closeWinner();
+    if (replayFn) replayFn();
+  };
+
+  startConfetti();
+}
+
+function closeWinner() {
+  document.getElementById('winner-overlay').classList.remove('active');
+  stopConfetti();
+  showScreen('lobby');
+}
+
+function startConfetti() {
+  const canvas = document.getElementById('confetti-canvas');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  const ctx = canvas.getContext('2d');
+  confettiPieces = [];
+
+  for (let i = 0; i < 200; i++) {
+    confettiPieces.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height - canvas.height,
+      w: Math.random() * 10 + 5,
+      h: Math.random() * 6 + 3,
+      color: COLORS[Math.floor(Math.random() * COLORS.length)],
+      vx: (Math.random() - 0.5) * 4,
+      vy: Math.random() * 4 + 2,
+      rot: Math.random() * Math.PI * 2,
+      rotV: (Math.random() - 0.5) * 0.2,
+    });
+  }
+
+  function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    confettiPieces.forEach(p => {
+      p.x += p.vx;
+      p.y += p.vy;
+      p.rot += p.rotV;
+      if (p.y > canvas.height + 20) { p.y = -20; p.x = Math.random() * canvas.width; }
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+      ctx.restore();
+    });
+    confettiAnim = requestAnimationFrame(animate);
+  }
+  animate();
+}
+
+function stopConfetti() {
+  if (confettiAnim) cancelAnimationFrame(confettiAnim);
+  const canvas = document.getElementById('confetti-canvas');
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
+
+// ═══════════════════════════════════════════
+// AUDIO
+// ═══════════════════════════════════════════
+let audioCtx = null;
+
+function playTick(volume = 0.3) {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.frequency.setValueAtTime(800 + Math.random() * 400, audioCtx.currentTime);
+  osc.type = 'sine';
+  gain.gain.setValueAtTime(volume, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
+  osc.start(audioCtx.currentTime);
+  osc.stop(audioCtx.currentTime + 0.05);
+}
+
+// ═══════════════════════════════════════════
+// PLINKO GAME
+// ═══════════════════════════════════════════
+let plinkoState = { pegs: [], ball: null, animating: false, bucketWidth: 0 };
+
+function initPlinko() {
+  const canvas = document.getElementById('plinko-canvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+
+  // Build pegs
+  const rows = 12;
+  const pegRadius = 5;
+  const startY = 40;
+  const endY = H - 50;
+  const rowSpacing = (endY - startY) / rows;
+  const pegs = [];
+  const cols = players.length + 2;
+  const colSpacing = (W - 80) / cols;
+
+  for (let r = 0; r < rows; r++) {
+    const y = startY + r * rowSpacing;
+    const numPegs = r % 2 === 0 ? cols : cols + 1;
+    const offsetX = r % 2 === 0 ? 40 + colSpacing / 2 : 40;
+    for (let c = 0; c < numPegs; c++) {
+      pegs.push({ x: offsetX + c * colSpacing, y, r: pegRadius });
+    }
+  }
+
+  plinkoState = { pegs, ball: null, animating: false, W, H, colSpacing, rows, startY, endY };
+
+  // Build buckets
+  const bucketCount = players.length;
+  const bucketDiv = document.getElementById('plinko-buckets');
+  const shuffled = [...players].sort(() => Math.random() - 0.5);
+  plinkoState.bucketPlayers = shuffled;
+
+  bucketDiv.innerHTML = shuffled.map((p, i) =>
+    `<div class="plinko-bucket" data-index="${i}" style="border-bottom: 3px solid ${p.color}">${escapeHtml(p.name)}</div>`
+  ).join('');
+
+  drawPlinko(ctx, W, H);
+}
+
+function drawPlinko(ctx, W, H) {
+  ctx.clearRect(0, 0, W, H);
+
+  // Subtle table gradient
+  const grad = ctx.createLinearGradient(0, 0, 0, H);
+  grad.addColorStop(0, '#0f1923');
+  grad.addColorStop(1, '#142231');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+
+  // Pegs
+  plinkoState.pegs.forEach(peg => {
+    // Glow
+    ctx.beginPath();
+    ctx.arc(peg.x, peg.y, peg.r + 3, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(0, 231, 1, 0.06)';
+    ctx.fill();
+    // Peg
+    ctx.beginPath();
+    ctx.arc(peg.x, peg.y, peg.r, 0, Math.PI * 2);
+    const pg = ctx.createRadialGradient(peg.x - 1, peg.y - 1, 0, peg.x, peg.y, peg.r);
+    pg.addColorStop(0, 'rgba(255,255,255,0.5)');
+    pg.addColorStop(1, 'rgba(255,255,255,0.15)');
+    ctx.fillStyle = pg;
+    ctx.fill();
+  });
+
+  // Ball
+  if (plinkoState.ball) {
+    const b = plinkoState.ball;
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, 8, 0, Math.PI * 2);
+    const g = ctx.createRadialGradient(b.x - 2, b.y - 2, 1, b.x, b.y, 8);
+    g.addColorStop(0, '#00ff44');
+    g.addColorStop(1, '#00a651');
+    ctx.fillStyle = g;
+    ctx.fill();
+    ctx.shadowColor = '#00e701';
+    ctx.shadowBlur = 15;
+    ctx.fill();
+    ctx.shadowBlur = 0;
+  }
+}
+
+function plinkoDrop() {
+  if (plinkoState.animating) return;
+  plinkoState.animating = true;
+  document.getElementById('plinko-drop-btn').disabled = true;
+
+  const canvas = document.getElementById('plinko-canvas');
+  const ctx = canvas.getContext('2d');
+  const { W, H, pegs, colSpacing } = plinkoState;
+
+  const ball = {
+    x: W / 2 + (Math.random() - 0.5) * 20,
+    y: 10,
+    vx: 0,
+    vy: 0,
+  };
+  plinkoState.ball = ball;
+
+  const gravity = 0.25;
+  const friction = 0.7;
+  const bounciness = 0.5;
+
+  function step() {
+    ball.vy += gravity;
+    ball.x += ball.vx;
+    ball.y += ball.vy;
+
+    // Peg collisions
+    pegs.forEach(peg => {
+      const dx = ball.x - peg.x;
+      const dy = ball.y - peg.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      const minDist = peg.r + 8;
+      if (dist < minDist) {
+        const angle = Math.atan2(dy, dx);
+        ball.x = peg.x + Math.cos(angle) * minDist;
+        ball.y = peg.y + Math.sin(angle) * minDist;
+        const speed = Math.sqrt(ball.vx * ball.vx + ball.vy * ball.vy);
+        ball.vx = Math.cos(angle) * speed * bounciness + (Math.random() - 0.5) * 1.5;
+        ball.vy = Math.sin(angle) * speed * bounciness;
+        if (ball.vy < 0.5) ball.vy = 0.5;
+        playTick(Math.min(0.15, speed * 0.03));
+      }
+    });
+
+    // Walls
+    if (ball.x < 20) { ball.x = 20; ball.vx = Math.abs(ball.vx) * friction; }
+    if (ball.x > W - 20) { ball.x = W - 20; ball.vx = -Math.abs(ball.vx) * friction; }
+
+    drawPlinko(ctx, W, H);
+
+    if (ball.y < H - 30) {
+      requestAnimationFrame(step);
+    } else {
+      // Determine bucket
+      const bucketCount = players.length;
+      const totalWidth = W - 80;
+      const bucketW = totalWidth / bucketCount;
+      let bucketIndex = Math.floor((ball.x - 40) / bucketW);
+      bucketIndex = Math.max(0, Math.min(bucketCount - 1, bucketIndex));
+
+      // Highlight bucket
+      document.querySelectorAll('.plinko-bucket').forEach((el, i) => {
+        el.classList.toggle('highlight', i === bucketIndex);
+      });
+
+      const winner = plinkoState.bucketPlayers[bucketIndex];
+      setTimeout(() => {
+        showWinner(winner.name, () => launchGame('plinko'));
+      }, 800);
+
+      plinkoState.animating = false;
+      document.getElementById('plinko-drop-btn').disabled = false;
+    }
+  }
+
+  step();
+}
+
+function plinkoReset() {
+  plinkoState.animating = false;
+  plinkoState.ball = null;
+  document.getElementById('plinko-drop-btn').disabled = false;
+  document.querySelectorAll('.plinko-bucket').forEach(el => el.classList.remove('highlight'));
+  initPlinko();
+}
+
+// ═══════════════════════════════════════════
+// WHEEL OF FORTUNE
+// ═══════════════════════════════════════════
+let wheelState = { angle: 0, spinning: false };
+
+function initWheel() {
+  drawWheel(0);
+}
+
+function drawWheel(rotation) {
+  const canvas = document.getElementById('wheel-canvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const cx = W / 2, cy = H / 2;
+  const radius = Math.min(cx, cy) - 12;
+
+  ctx.clearRect(0, 0, W, H);
+
+  const n = players.length;
+  const sliceAngle = (Math.PI * 2) / n;
+
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(rotation);
+
+  players.forEach((p, i) => {
+    const startAngle = i * sliceAngle;
+    const endAngle = startAngle + sliceAngle;
+
+    // Slice
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.arc(0, 0, radius, startAngle, endAngle);
+    ctx.closePath();
+
+    const gradient = ctx.createRadialGradient(0, 0, radius * 0.3, 0, 0, radius);
+    const baseColor = p.color;
+    gradient.addColorStop(0, baseColor + 'cc');
+    gradient.addColorStop(1, baseColor + '88');
+    ctx.fillStyle = gradient;
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Text — flip when in left half so it's always readable
+    const midAngle = startAngle + sliceAngle / 2;
+    ctx.save();
+    ctx.rotate(midAngle);
+    const normalizedMid = ((midAngle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+    const isFlipped = normalizedMid > Math.PI / 2 && normalizedMid < Math.PI * 1.5;
+    ctx.fillStyle = '#fff';
+    ctx.font = `bold ${Math.min(16, 200 / n)}px 'Outfit', sans-serif`;
+    ctx.shadowColor = 'rgba(0,0,0,0.5)';
+    ctx.shadowBlur = 4;
+    if (isFlipped) {
+      ctx.rotate(Math.PI);
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(p.name, -(radius - 20), 0);
+    } else {
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(p.name, radius - 20, 0);
+    }
+    ctx.shadowBlur = 0;
+    ctx.restore();
+  });
+
+  // Outer ring
+  ctx.beginPath();
+  ctx.arc(0, 0, radius, 0, Math.PI * 2);
+  ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+  ctx.lineWidth = 4;
+  ctx.stroke();
+
+  // Tick marks
+  for (let i = 0; i < n * 2; i++) {
+    const a = (i / (n * 2)) * Math.PI * 2;
+    ctx.save();
+    ctx.rotate(a);
+    ctx.beginPath();
+    ctx.moveTo(radius - 8, 0);
+    ctx.lineTo(radius, 0);
+    ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  ctx.restore();
+}
+
+function spinWheel() {
+  if (wheelState.spinning) return;
+  wheelState.spinning = true;
+  document.getElementById('wheel-spin-btn').disabled = true;
+
+  const n = players.length;
+  const sliceAngle = (Math.PI * 2) / n;
+
+  // Random target
+  const spins = 5 + Math.random() * 5;
+  const targetAngle = wheelState.angle + spins * Math.PI * 2 + Math.random() * Math.PI * 2;
+  const duration = 5000;
+  const startTime = performance.now();
+  const startAngle = wheelState.angle;
+
+  // Tick sound simulation - flash pointer
+  let lastTickIndex = -1;
+
+  function ease(t) {
+    return 1 - Math.pow(1 - t, 4);
+  }
+
+  function animate(now) {
+    const elapsed = now - startTime;
+    const t = Math.min(elapsed / duration, 1);
+    const easedT = ease(t);
+    const currentAngle = startAngle + (targetAngle - startAngle) * easedT;
+
+    drawWheel(currentAngle);
+
+    // Tick detection
+    const normalized = ((currentAngle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+    const tickIndex = Math.floor(normalized / sliceAngle);
+    if (tickIndex !== lastTickIndex) {
+      lastTickIndex = tickIndex;
+      // Visual + audio tick
+      const pointer = document.querySelector('.wheel-pointer');
+      pointer.style.transform = 'translateX(-50%) scale(1.2)';
+      setTimeout(() => pointer.style.transform = 'translateX(-50%)', 100);
+      playTick(0.15 + 0.2 * t);
+    }
+
+    if (t < 1) {
+      requestAnimationFrame(animate);
+    } else {
+      wheelState.angle = currentAngle;
+      wheelState.spinning = false;
+      document.getElementById('wheel-spin-btn').disabled = false;
+
+      // Determine winner - pointer is at top (3PI/2 in canvas coords)
+      // In wheel's local coords, the angle under the pointer is:
+      const pointerAngle = ((Math.PI * 1.5 - currentAngle) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
+      const winnerIndex = Math.floor(pointerAngle / sliceAngle) % n;
+
+      setTimeout(() => {
+        showWinner(players[winnerIndex].name, () => launchGame('wheel'));
+      }, 500);
+    }
+  }
+
+  requestAnimationFrame(animate);
+}
+
+// ═══════════════════════════════════════════
+// BLACKJACK
+// ═══════════════════════════════════════════
+let bjState = {};
+
+function bjInit() {
+  bjState = {
+    deck: [],
+    dealer: { hand: [], score: 0, hidden: true },
+    players: players.map(p => ({
+      name: p.name,
+      color: p.color,
+      hand: [],
+      score: 0,
+      status: 'playing', // playing, standing, busted
+    })),
+    currentPlayer: -1,
+    phase: 'waiting', // waiting, playerTurn, dealerTurn, done
+  };
+  bjRender();
+}
+
+function bjCreateDeck() {
+  const suits = ['♠','♥','♦','♣'];
+  const ranks = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+  const deck = [];
+  for (const s of suits) for (const r of ranks) deck.push({ suit: s, rank: r });
+  // Shuffle
+  for (let i = deck.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [deck[i], deck[j]] = [deck[j], deck[i]];
+  }
+  return deck;
+}
+
+function bjCardValue(hand) {
+  let score = 0;
+  let aces = 0;
+  for (const card of hand) {
+    if (card.rank === 'A') { aces++; score += 11; }
+    else if (['K','Q','J'].includes(card.rank)) score += 10;
+    else score += parseInt(card.rank);
+  }
+  while (score > 21 && aces > 0) { score -= 10; aces--; }
+  return score;
+}
+
+function bjCardHtml(card, faceDown = false) {
+  if (faceDown) return '<div class="card face-down"></div>';
+  const isRed = card.suit === '♥' || card.suit === '♦';
+  return `<div class="card face-up ${isRed ? 'red' : ''}">
+    <span>${card.rank}</span>
+    <span class="suit">${card.suit}</span>
+  </div>`;
+}
+
+function bjDeal() {
+  bjState.deck = bjCreateDeck();
+  bjState.dealer = { hand: [], score: 0, hidden: true };
+  bjState.players.forEach(p => { p.hand = []; p.score = 0; p.status = 'playing'; });
+
+  // Deal 2 cards each
+  for (let round = 0; round < 2; round++) {
+    bjState.players.forEach(p => p.hand.push(bjState.deck.pop()));
+    bjState.dealer.hand.push(bjState.deck.pop());
+  }
+
+  // Calculate scores
+  bjState.players.forEach(p => p.score = bjCardValue(p.hand));
+  bjState.dealer.score = bjCardValue(bjState.dealer.hand);
+
+  // Check for naturals
+  bjState.players.forEach(p => {
+    if (p.score === 21) p.status = 'standing';
+  });
+
+  // Start turns
+  bjState.currentPlayer = 0;
+  bjState.phase = 'playerTurn';
+  bjAdvanceToActivePlayer();
+  bjRender();
+}
+
+function bjAdvanceToActivePlayer() {
+  while (bjState.currentPlayer < bjState.players.length &&
+         bjState.players[bjState.currentPlayer].status !== 'playing') {
+    bjState.currentPlayer++;
+  }
+  if (bjState.currentPlayer >= bjState.players.length) {
+    bjDealerPlay();
+  }
+}
+
+function bjHit() {
+  const p = bjState.players[bjState.currentPlayer];
+  if (!p || p.status !== 'playing') return;
+  p.hand.push(bjState.deck.pop());
+  p.score = bjCardValue(p.hand);
+  if (p.score > 21) {
+    p.status = 'busted';
+    bjState.currentPlayer++;
+    bjAdvanceToActivePlayer();
+  }
+  bjRender();
+}
+
+function bjStand() {
+  const p = bjState.players[bjState.currentPlayer];
+  if (!p) return;
+  p.status = 'standing';
+  bjState.currentPlayer++;
+  bjAdvanceToActivePlayer();
+  bjRender();
+}
+
+function bjDealerPlay() {
+  bjState.phase = 'dealerTurn';
+  bjState.dealer.hidden = false;
+  bjRender();
+
+  function dealerStep() {
+    bjState.dealer.score = bjCardValue(bjState.dealer.hand);
+    if (bjState.dealer.score < 17) {
+      bjState.dealer.hand.push(bjState.deck.pop());
+      bjState.dealer.score = bjCardValue(bjState.dealer.hand);
+      bjRender();
+      setTimeout(dealerStep, 700);
+    } else {
+      bjFinish();
+    }
+  }
+
+  setTimeout(dealerStep, 800);
+}
+
+function bjFinish() {
+  bjState.phase = 'done';
+  const dealerScore = bjState.dealer.score;
+  const dealerBusted = dealerScore > 21;
+
+  // Determine winners
+  let bestScore = -1;
+  let winners = [];
+
+  bjState.players.forEach(p => {
+    if (p.status === 'busted') return;
+    const pScore = p.score;
+    if (dealerBusted || pScore > dealerScore) {
+      if (pScore > bestScore) {
+        bestScore = pScore;
+        winners = [p];
+      } else if (pScore === bestScore) {
+        winners.push(p);
+      }
+    } else if (pScore === dealerScore) {
+      // Push - not a winner
+    }
+  });
+
+  // If no one beat dealer, closest without busting
+  if (winners.length === 0) {
+    bjState.players.forEach(p => {
+      if (p.status === 'busted') return;
+      if (p.score > bestScore) {
+        bestScore = p.score;
+        winners = [p];
+      } else if (p.score === bestScore) {
+        winners.push(p);
+      }
+    });
+  }
+
+  // Mark winners
+  winners.forEach(w => {
+    const slot = bjState.players.find(p => p.name === w.name);
+    if (slot) slot.winner = true;
+  });
+
+  bjRender();
+
+  // If everyone busted, pick random
+  if (winners.length === 0) {
+    const randomWinner = players[Math.floor(Math.random() * players.length)];
+    setTimeout(() => showWinner(randomWinner.name + ' (everyone busted!)', () => launchGame('blackjack')), 1200);
+  } else {
+    const winner = winners[Math.floor(Math.random() * winners.length)];
+    setTimeout(() => showWinner(winner.name, () => launchGame('blackjack')), 1200);
+  }
+}
+
+function bjRender() {
+  const dealerHand = document.getElementById('bj-dealer-hand');
+  const grid = document.getElementById('bj-players-grid');
+  const msg = document.getElementById('bj-message');
+  const controls = document.getElementById('bj-controls');
+
+  // Dealer
+  if (bjState.dealer.hand.length > 0) {
+    dealerHand.innerHTML = bjState.dealer.hand.map((card, i) => {
+      if (i === 1 && bjState.dealer.hidden) return bjCardHtml(card, true);
+      return bjCardHtml(card);
+    }).join('');
+    if (!bjState.dealer.hidden) {
+      dealerHand.innerHTML += `<span style="align-self:center;margin-left:8px;font-family:var(--font-mono);font-weight:700;color:${bjState.dealer.score > 21 ? 'var(--red)' : 'var(--green-primary)'}">${bjState.dealer.score}</span>`;
+    }
+  } else {
+    dealerHand.innerHTML = '<span style="color:var(--text-muted);font-size:0.9rem;">Cards will appear here</span>';
+  }
+
+  // Players
+  grid.innerHTML = bjState.players.map((p, i) => {
+    const isActive = bjState.phase === 'playerTurn' && i === bjState.currentPlayer;
+    let cls = 'bj-player-slot';
+    if (isActive) cls += ' active-turn';
+    if (p.status === 'busted') cls += ' busted';
+    if (p.winner) cls += ' winner';
+
+    let statusHtml = '';
+    if (p.status === 'standing') statusHtml = '<div class="bj-status standing">Standing</div>';
+    if (p.status === 'busted') statusHtml = '<div class="bj-status busted">Busted</div>';
+    if (p.winner) statusHtml = '<div class="bj-status" style="color:var(--gold)">Winner!</div>';
+
+    return `<div class="${cls}">
+      <div class="bj-player-info">
+        <span class="name" style="color:${p.color}">${escapeHtml(p.name)}</span>
+        <span class="score ${p.score > 21 ? 'bust' : ''}">${p.hand.length > 0 ? p.score : '-'}</span>
+      </div>
+      <div class="bj-hand">${p.hand.map(c => bjCardHtml(c)).join('')}</div>
+      ${statusHtml}
+    </div>`;
+  }).join('');
+
+  // Message + Controls
+  if (bjState.phase === 'waiting') {
+    msg.textContent = 'Press Deal to start a round';
+    controls.innerHTML = '<button class="btn btn-primary" onclick="bjDeal()">Deal Cards</button>';
+  } else if (bjState.phase === 'playerTurn') {
+    const cp = bjState.players[bjState.currentPlayer];
+    if (cp) {
+      msg.textContent = `${cp.name}'s turn — Hit or Stand?`;
+      controls.innerHTML = `
+        <button class="btn btn-primary" onclick="bjHit()">Hit</button>
+        <button class="btn btn-secondary" onclick="bjStand()">Stand</button>
+      `;
+    }
+  } else if (bjState.phase === 'dealerTurn') {
+    msg.textContent = 'Dealer is drawing...';
+    controls.innerHTML = '';
+  } else if (bjState.phase === 'done') {
+    msg.textContent = 'Round complete!';
+    controls.innerHTML = `
+      <button class="btn btn-primary" onclick="bjDeal()">Deal Again</button>
+      <button class="btn btn-ghost" onclick="showScreen('lobby')">Back to Lobby</button>
+    `;
+  }
+}
+
+// ═══════════════════════════════════════════
+// SLOT MACHINE
+// ═══════════════════════════════════════════
+let slotsState = {};
+function slotsInit() {
+  const reels = document.getElementById('slots-reels');
+  const names = players.map(p => p.name);
+  reels.innerHTML = [0,1,2].map(r => {
+    const items = [];
+    for (let i = 0; i < 30; i++) items.push(names[Math.floor(Math.random() * names.length)]);
+    return `<div class="slots-reel" data-reel="${r}"><div class="slots-reel-inner">${items.map(n => `<div class="slots-reel-item">${escapeHtml(n)}</div>`).join('')}</div></div>`;
+  }).join('');
+  slotsState = { spinning: false };
+  document.getElementById('slots-status').textContent = 'Pull the lever!';
+  document.getElementById('slots-btn').disabled = false;
+}
+function slotsSpin() {
+  if (slotsState.spinning) return;
+  slotsState.spinning = true;
+  document.getElementById('slots-btn').disabled = true;
+  const winner = players[Math.floor(Math.random() * players.length)];
+  const names = players.map(p => p.name);
+  document.querySelectorAll('.slots-reel').forEach((reel, ri) => {
+    const inner = reel.querySelector('.slots-reel-inner');
+    const items = [];
+    for (let i = 0; i < 40 + ri * 10; i++) items.push(names[Math.floor(Math.random() * names.length)]);
+    items.push(winner.name);
+    for (let i = 0; i < 3; i++) items.push(names[Math.floor(Math.random() * names.length)]);
+    inner.innerHTML = items.map(n => `<div class="slots-reel-item">${escapeHtml(n)}</div>`).join('');
+    inner.style.transition = 'none';
+    inner.style.transform = 'translateY(0)';
+    reel.classList.add('spinning');
+    const targetIdx = items.indexOf(winner.name);
+    const targetY = -(targetIdx * 120);
+    setTimeout(() => {
+      reel.classList.remove('spinning');
+      inner.style.transition = `transform ${1.5 + ri * 0.5}s cubic-bezier(0.2, 0.8, 0.3, 1)`;
+      inner.style.transform = `translateY(${targetY}px)`;
+    }, 50);
+  });
+  const totalTime = 1500 + 2 * 500 + 800;
+  document.getElementById('slots-status').textContent = 'Spinning...';
+  setTimeout(() => {
+    slotsState.spinning = false;
+    document.getElementById('slots-btn').disabled = false;
+    document.getElementById('slots-status').textContent = `${winner.name} across all reels!`;
+    setTimeout(() => showWinner(winner.name, () => launchGame('slots')), 600);
+  }, totalTime);
+}
+
+// ═══════════════════════════════════════════
+// DICE DUEL
+// ═══════════════════════════════════════════
+function diceInit() {
+  const grid = document.getElementById('dice-grid');
+  grid.innerHTML = players.map(p => `<div class="dice-player"><div class="pname" style="color:${p.color}">${escapeHtml(p.name)}</div><div class="dice-faces"><div class="dice-face">?</div><div class="dice-face">?</div></div><div class="dice-total">-</div></div>`).join('');
+  document.getElementById('dice-status').textContent = 'Ready to roll!';
+  document.getElementById('dice-btn').disabled = false;
+}
+function diceRoll() {
+  document.getElementById('dice-btn').disabled = true;
+  let frames = 0;
+  const results = players.map(() => [0, 0]);
+  const anim = setInterval(() => {
+    frames++;
+    document.querySelectorAll('.dice-player').forEach((el, i) => {
+      const d1 = Math.ceil(Math.random() * 6), d2 = Math.ceil(Math.random() * 6);
+      const faces = el.querySelectorAll('.dice-face');
+      faces[0].textContent = ['⚀','⚁','⚂','⚃','⚄','⚅'][d1-1];
+      faces[1].textContent = ['⚀','⚁','⚂','⚃','⚄','⚅'][d2-1];
+      if (frames >= 20) { results[i] = [d1, d2]; }
+    });
+    if (frames >= 20) {
+      clearInterval(anim);
+      let best = -1, winIdx = [];
+      results.forEach(([a,b], i) => {
+        const t = a + b;
+        document.querySelectorAll('.dice-player')[i].querySelector('.dice-total').textContent = t;
+        if (t > best) { best = t; winIdx = [i]; } else if (t === best) winIdx.push(i);
+      });
+      const wi = winIdx[Math.floor(Math.random() * winIdx.length)];
+      document.querySelectorAll('.dice-player')[wi].classList.add('winner');
+      document.getElementById('dice-status').textContent = `${players[wi].name} wins with ${best}!`;
+      document.getElementById('dice-btn').disabled = false;
+      setTimeout(() => showWinner(players[wi].name, () => launchGame('dice')), 1000);
+    }
+  }, 80);
+}
+
+// ═══════════════════════════════════════════
+// WAR
+// ═══════════════════════════════════════════
+function warInit() {
+  const grid = document.getElementById('war-grid');
+  grid.innerHTML = players.map(p => `<div class="war-slot"><div class="pname" style="color:${p.color}">${escapeHtml(p.name)}</div><div class="card face-down" style="margin:0 auto"></div></div>`).join('');
+  document.getElementById('war-status').textContent = 'Ready to flip!';
+  document.getElementById('war-btn').disabled = false;
+}
+function warFlip() {
+  document.getElementById('war-btn').disabled = true;
+  const deck = bjCreateDeck();
+  const cards = players.map(() => deck.pop());
+  const vals = cards.map(c => { if (c.rank === 'A') return 14; if (c.rank === 'K') return 13; if (c.rank === 'Q') return 12; if (c.rank === 'J') return 11; return parseInt(c.rank); });
+  let best = Math.max(...vals), winIdx = [];
+  vals.forEach((v, i) => { if (v === best) winIdx.push(i); });
+  const wi = winIdx[Math.floor(Math.random() * winIdx.length)];
+  document.querySelectorAll('.war-slot').forEach((el, i) => {
+    setTimeout(() => {
+      el.innerHTML = `<div class="pname" style="color:${players[i].color}">${escapeHtml(players[i].name)}</div>${bjCardHtml(cards[i])}`;
+      if (i !== wi) el.classList.add('loser'); else el.classList.add('winner');
+    }, i * 200);
+  });
+  setTimeout(() => {
+    document.getElementById('war-status').textContent = `${players[wi].name} wins with ${cards[wi].rank}${cards[wi].suit}!`;
+    document.getElementById('war-btn').disabled = false;
+    setTimeout(() => showWinner(players[wi].name, () => launchGame('war')), 800);
+  }, players.length * 200 + 600);
+}
+
+// ═══════════════════════════════════════════
+// HORSE RACE
+// ═══════════════════════════════════════════
+let horsesAnim = null;
+function horsesInit() {
+  const track = document.getElementById('race-track');
+  const emojis = ['🏇','🐎','🦄','🐴','🏇','🐎','🦄','🐴','🏇','🐎','🦄','🐴'];
+  const n = players.length;
+  // Build lane markings (rings between inner and outer edge)
+  let lanesHtml = '';
+  for (let i = 1; i <= n; i++) {
+    const pct = 52 + (48 - 52) / n * i; // not used, compute via absolute sizing
+    const wPct = 52 + (100 - 52) * (i / (n + 1));
+    const hPct = 44 + (100 - 44) * (i / (n + 1));
+    lanesHtml += `<div class="race-lane-marking" style="width:${wPct}%;height:${hPct}%"></div>`;
+  }
+  // Build horse elements
+  let horsesHtml = players.map((p, i) =>
+    `<div class="race-horse" id="race-horse-${i}" title="${escapeHtml(p.name)}">${emojis[i % emojis.length]}</div>`
+  ).join('');
+  // Build legend
+  let legendHtml = '<div class="race-legend">' + players.map((p, i) =>
+    `<div class="race-legend-item"><span class="race-legend-dot" style="background:${p.color}"></span><span>${emojis[i % emojis.length]}</span><span style="color:${p.color}">${escapeHtml(p.name)}</span></div>`
+  ).join('') + '</div>';
+
+  track.innerHTML = `
+    <div class="race-oval-wrap">
+      <div class="race-oval-surface"></div>
+      ${lanesHtml}
+      <div class="race-oval-inner"></div>
+      <div class="race-start-line"></div>
+      ${horsesHtml}
+    </div>
+    ${legendHtml}`;
+
+  // Position horses at start (top of oval)
+  positionHorsesAtStart();
+  document.getElementById('horses-status').textContent = 'Horses at the gate!';
+  document.getElementById('horses-btn').disabled = false;
+  if (horsesAnim) cancelAnimationFrame(horsesAnim);
+}
+
+function positionHorsesAtStart() {
+  const n = players.length;
+  const cx = 210, cy = 140; // center of 420x280
+  for (let i = 0; i < n; i++) {
+    const laneRatio = (i + 1) / (n + 1);
+    const rx = (0.26 + (0.5 - 0.26) * laneRatio) * 420;
+    const ry = (0.22 + (0.5 - 0.22) * laneRatio) * 280;
+    const angle = -Math.PI / 2; // top
+    const x = cx + rx * Math.cos(angle);
+    const y = cy + ry * Math.sin(angle);
+    const el = document.getElementById(`race-horse-${i}`);
+    if (el) { el.style.left = x + 'px'; el.style.top = y + 'px'; }
+  }
+}
+
+function horsesStart() {
+  document.getElementById('horses-btn').disabled = true;
+  document.getElementById('horses-status').textContent = "And they're off!";
+  const n = players.length;
+  const cx = 210, cy = 140;
+  const angles = Array(n).fill(-Math.PI / 2); // start at top
+  const speeds = players.map(() => (Math.random() * 0.7 + 0.3) * (Math.PI / 180)); // deg to rad per frame
+  const finishAngle = -Math.PI / 2 + Math.PI * 2; // full lap
+  let done = false;
+
+  function tick() {
+    if (done) return;
+    for (let i = 0; i < n; i++) {
+      // Vary speed slightly each frame for drama
+      angles[i] += speeds[i] * (0.8 + Math.random() * 0.4);
+      const laneRatio = (i + 1) / (n + 1);
+      const rx = (0.26 + (0.5 - 0.26) * laneRatio) * 420;
+      const ry = (0.22 + (0.5 - 0.22) * laneRatio) * 280;
+      const x = cx + rx * Math.cos(angles[i]);
+      const y = cy + ry * Math.sin(angles[i]);
+      const el = document.getElementById(`race-horse-${i}`);
+      if (el) { el.style.left = x + 'px'; el.style.top = y + 'px'; }
+    }
+    // Check finish
+    const maxAngle = Math.max(...angles);
+    if (maxAngle >= finishAngle) {
+      done = true;
+      let winIdx = [];
+      angles.forEach((a, i) => { if (a >= finishAngle) winIdx.push(i); });
+      const wi = winIdx[Math.floor(Math.random() * winIdx.length)];
+      document.getElementById('horses-status').textContent = `${players[wi].name} crosses the finish line!`;
+      document.getElementById('horses-btn').disabled = false;
+      setTimeout(() => showWinner(players[wi].name, () => launchGame('horses')), 800);
+      return;
+    }
+    horsesAnim = requestAnimationFrame(tick);
+  }
+  horsesAnim = requestAnimationFrame(tick);
+}
+
+// ═══════════════════════════════════════════
+// COIN FLIP TOURNAMENT
+// ═══════════════════════════════════════════
+let cfState = {};
+function coinflipInit() {
+  const shuffled = [...players].sort(() => Math.random() - 0.5);
+  cfState = { rounds: [], currentRound: 0, currentMatch: 0, participants: shuffled.map(p => p.name), done: false, flipping: false };
+  buildBracket();
+  document.getElementById('coinflip-status').textContent = `Round 1 — ${cfState.rounds[0].length} match${cfState.rounds[0].length > 1 ? 'es' : ''}`;
+  document.getElementById('coinflip-btn').disabled = false;
+  document.getElementById('coin-display').classList.remove('flipping');
+}
+function buildBracket() {
+  const names = cfState.participants;
+  cfState.rounds = [];
+  let current = [...names];
+  while (current.length > 1) {
+    const round = [];
+    for (let i = 0; i < current.length; i += 2) {
+      if (i + 1 < current.length) round.push({ a: current[i], b: current[i+1], winner: null });
+      else round.push({ a: current[i], b: null, winner: current[i] });
+    }
+    cfState.rounds.push(round);
+    current = round.map(m => m.winner || m.a);
+  }
+  cfState.currentRound = 0;
+  cfState.currentMatch = 0;
+  renderBracket();
+}
+function renderBracket() {
+  const panel = document.getElementById('coinflip-bracket');
+  panel.innerHTML = cfState.rounds.map((round, ri) => {
+    const label = ri === cfState.rounds.length - 1 ? 'Final' : `Round ${ri + 1}`;
+    return `<div class="bj-section-label">${label}</div><div class="bracket-round">${round.map(m => {
+      const aClass = m.winner === m.a ? 'winner' : (m.winner && m.winner !== m.a ? 'loser' : '');
+      const bClass = m.b === null ? 'bye' : (m.winner === m.b ? 'winner' : (m.winner && m.winner !== m.b ? 'loser' : ''));
+      return `<div class="bracket-match"><span class="bracket-name ${aClass}">${escapeHtml(m.a)}</span><span class="bracket-vs">${m.b ? 'vs' : 'BYE'}</span><span class="bracket-name ${bClass}">${m.b ? escapeHtml(m.b) : '—'}</span></div>`;
+    }).join('')}</div>`;
+  }).join('');
+}
+function coinflipNext() {
+  if (cfState.done || cfState.flipping) return;
+  const round = cfState.rounds[cfState.currentRound];
+  if (cfState.currentMatch < round.length) {
+    const match = round[cfState.currentMatch];
+    if (match.winner) { cfState.currentMatch++; }
+  }
+  if (cfState.currentMatch >= round.length) {
+    cfState.currentRound++;
+    cfState.currentMatch = 0;
+    if (cfState.currentRound >= cfState.rounds.length) {
+      cfState.done = true;
+      const finalWinner = cfState.rounds[cfState.rounds.length - 1][0].winner;
+      document.getElementById('coinflip-status').textContent = `${finalWinner} wins the tournament!`;
+      setTimeout(() => showWinner(finalWinner, () => launchGame('coinflip')), 600);
+      return;
+    }
+    const prevRound = cfState.rounds[cfState.currentRound - 1];
+    const winners = prevRound.map(m => m.winner);
+    const nextRound = cfState.rounds[cfState.currentRound];
+    let wi = 0;
+    nextRound.forEach(m => { m.a = winners[wi++]; m.b = wi < winners.length ? winners[wi++] : null; if (!m.b) m.winner = m.a; });
+    renderBracket();
+    document.getElementById('coinflip-status').textContent = `Round ${cfState.currentRound + 1}`;
+    return;
+  }
+  const m = round[cfState.currentMatch];
+  if (!m.b) { m.winner = m.a; cfState.currentMatch++; renderBracket(); coinflipNext(); return; }
+  cfState.flipping = true;
+  document.getElementById('coinflip-btn').disabled = true;
+  const coin = document.getElementById('coin-display');
+  coin.classList.add('flipping');
+  document.getElementById('coinflip-status').textContent = `${m.a} vs ${m.b} — Flipping...`;
+  setTimeout(() => {
+    cfState.flipping = false;
+    coin.classList.remove('flipping');
+    m.winner = Math.random() < 0.5 ? m.a : m.b;
+    coin.textContent = m.winner === m.a ? '👑' : '👑';
+    renderBracket();
+    document.getElementById('coinflip-status').textContent = `${m.winner} wins this match!`;
+    cfState.currentMatch++;
+    document.getElementById('coinflip-btn').disabled = false;
+  }, 1500);
+}
+
+// ═══════════════════════════════════════════
+// DEAL OR NO DEAL
+// ═══════════════════════════════════════════
+let dondState = {};
+function dondInit() {
+  const shuffled = [...players].sort(() => Math.random() - 0.5);
+  dondState = { cases: shuffled.map((p, i) => ({ player: p, num: i + 1, opened: false })), remaining: shuffled.length, yourCase: 0 };
+  dondState.cases[0].isYours = true;
+  renderDond();
+  document.getElementById('dond-status').textContent = `Case #1 is safe. Click other cases to eliminate them!`;
+}
+function renderDond() {
+  document.getElementById('dond-cases').innerHTML = dondState.cases.map((c, i) => {
+    let cls = 'dond-case';
+    if (c.opened) cls += ' opened';
+    if (c.isYours) cls += ' yours';
+    return `<div class="${cls}" onclick="dondOpen(${i})"><div class="case-num">${c.num}</div>${c.opened ? `<div class="case-label" style="color:${c.player.color}">${escapeHtml(c.player.name)}</div>` : (c.isYours ? '<div class="case-label" style="color:var(--green-primary)">YOURS</div>' : '')}</div>`;
+  }).join('');
+}
+function dondOpen(idx) {
+  const c = dondState.cases[idx];
+  if (c.opened || c.isYours) return;
+  c.opened = true;
+  dondState.remaining--;
+  renderDond();
+  const unopened = dondState.cases.filter(c => !c.opened && !c.isYours);
+  if (unopened.length === 0) {
+    const winner = dondState.cases.find(c => c.isYours);
+    document.getElementById('dond-status').textContent = `The last case belongs to ${winner.player.name}!`;
+    setTimeout(() => showWinner(winner.player.name, () => launchGame('dond')), 800);
+  } else {
+    document.getElementById('dond-status').textContent = `${c.player.name} eliminated! ${unopened.length} case${unopened.length > 1 ? 's' : ''} left.`;
+  }
+}
+
+// ═══════════════════════════════════════════
+// RUSSIAN ROULETTE
+// ═══════════════════════════════════════════
+let rrState = {};
+function rrInit() {
+  rrState = { players: players.map(p => ({ ...p, alive: true })), currentIdx: 0, chamber: Math.floor(Math.random() * 6), position: 0, done: false };
+  renderRR();
+  document.getElementById('rr-status').textContent = `${rrState.players[0].name}'s turn — pull the trigger!`;
+  document.getElementById('rr-btn').disabled = false;
+}
+function renderRR() {
+  document.getElementById('rr-players').innerHTML = rrState.players.map((p, i) => {
+    let cls = 'rr-player';
+    if (!p.alive) cls += ' eliminated';
+    if (p.alive && i === rrState.currentIdx) cls += ' active';
+    return `<div class="${cls}" style="color:${p.color}">${escapeHtml(p.name)}</div>`;
+  }).join('');
+}
+function rrPull() {
+  if (rrState.done) return;
+  document.getElementById('rr-btn').disabled = true;
+  const chamber = document.getElementById('rr-chamber');
+  chamber.classList.add('spinning');
+  setTimeout(() => {
+    chamber.classList.remove('spinning');
+    const p = rrState.players[rrState.currentIdx];
+    const hit = rrState.position === rrState.chamber;
+    rrState.position = (rrState.position + 1) % 6;
+    if (hit) {
+      p.alive = false;
+      chamber.textContent = '💥';
+      playTick(0.5);
+      rrState.chamber = Math.floor(Math.random() * 6);
+      rrState.position = 0;
+    } else {
+      chamber.textContent = '😮‍💨';
+    }
+    const alive = rrState.players.filter(p => p.alive);
+    if (alive.length === 1) {
+      rrState.done = true;
+      renderRR();
+      document.getElementById('rr-status').textContent = `${alive[0].name} survives!`;
+      setTimeout(() => showWinner(alive[0].name, () => launchGame('roulette')), 1000);
+      return;
+    }
+    do { rrState.currentIdx = (rrState.currentIdx + 1) % rrState.players.length; } while (!rrState.players[rrState.currentIdx].alive);
+    renderRR();
+    document.getElementById('rr-status').textContent = hit ? `${p.name} is eliminated! ${rrState.players[rrState.currentIdx].name}'s turn.` : `Click! ${p.name} survives. ${rrState.players[rrState.currentIdx].name}'s turn.`;
+    document.getElementById('rr-btn').disabled = false;
+    setTimeout(() => { chamber.textContent = '🔫'; }, 800);
+  }, 800);
+}
+
+// ═══════════════════════════════════════════
+// MINESWEEPER
+// ═══════════════════════════════════════════
+let minesState = {};
+function minesInit() {
+  const totalTiles = 36;
+  const mineCount = Math.min(Math.ceil(totalTiles * 0.3), totalTiles - players.length);
+  const tiles = Array(totalTiles).fill(false);
+  let placed = 0;
+  while (placed < mineCount) { const i = Math.floor(Math.random() * totalTiles); if (!tiles[i]) { tiles[i] = true; placed++; } }
+  minesState = { tiles, revealed: Array(totalTiles).fill(false), playerList: players.map(p => ({ ...p, alive: true })), currentIdx: 0, done: false };
+  renderMines();
+  document.getElementById('mines-status').textContent = `${players[0].name}'s turn — pick a tile!`;
+}
+function renderMines() {
+  const grid = document.getElementById('mines-grid');
+  grid.innerHTML = minesState.tiles.map((isMine, i) => {
+    if (minesState.revealed[i]) {
+      return `<div class="mines-tile revealed ${isMine ? 'mine' : 'safe'}">${isMine ? '💣' : '💎'}</div>`;
+    }
+    return `<div class="mines-tile" onclick="minesPick(${i})">❓</div>`;
+  }).join('');
+}
+function minesPick(idx) {
+  if (minesState.done || minesState.revealed[idx]) return;
+  minesState.revealed[idx] = true;
+  const p = minesState.playerList[minesState.currentIdx];
+  if (minesState.tiles[idx]) {
+    p.alive = false;
+    playTick(0.5);
+  }
+  renderMines();
+  const alive = minesState.playerList.filter(p => p.alive);
+  if (alive.length === 1) {
+    minesState.done = true;
+    document.getElementById('mines-status').textContent = `${alive[0].name} is the last one standing!`;
+    setTimeout(() => showWinner(alive[0].name, () => launchGame('mines')), 1000);
+    return;
+  }
+  if (minesState.revealed.filter(r => !r).length === 0) {
+    minesState.done = true;
+    const winner = alive[Math.floor(Math.random() * alive.length)];
+    document.getElementById('mines-status').textContent = `All tiles revealed! ${winner.name} wins!`;
+    setTimeout(() => showWinner(winner.name, () => launchGame('mines')), 1000);
+    return;
+  }
+  do { minesState.currentIdx = (minesState.currentIdx + 1) % minesState.playerList.length; } while (!minesState.playerList[minesState.currentIdx].alive);
+  const next = minesState.playerList[minesState.currentIdx];
+  document.getElementById('mines-status').textContent = minesState.tiles[idx] ? `${p.name} hit a mine! ${next.name}'s turn.` : `Safe! ${next.name}'s turn.`;
+}
+
+// ═══════════════════════════════════════════
+// SCRATCH CARDS
+// ═══════════════════════════════════════════
+let scratchState = {};
+function scratchInit() {
+  const prizes = players.map(() => Math.floor(Math.random() * 900) + 100);
+  scratchState = { prizes, scratched: Array(players.length).fill(false), done: false };
+  renderScratch();
+  document.getElementById('scratch-status').textContent = 'Click each card to scratch and reveal!';
+}
+function renderScratch() {
+  document.getElementById('scratch-grid').innerHTML = players.map((p, i) => {
+    const isScratched = scratchState.scratched[i];
+    let cls = 'scratch-card' + (isScratched ? ' scratched' : '');
+    if (scratchState.done && scratchState.winIdx === i) cls += ' winner';
+    return `<div class="${cls}" onclick="scratchReveal(${i})"><div class="pname" style="color:${p.color}">${escapeHtml(p.name)}</div><div class="scratch-cover">Scratch Me!</div><div class="scratch-prize" style="color:var(--gold)">$${scratchState.prizes[i]}</div></div>`;
+  }).join('');
+}
+function scratchReveal(idx) {
+  if (scratchState.scratched[idx] || scratchState.done) return;
+  scratchState.scratched[idx] = true;
+  playTick(0.2);
+  renderScratch();
+  if (scratchState.scratched.every(s => s)) {
+    scratchState.done = true;
+    let best = -1, winIdx = 0;
+    scratchState.prizes.forEach((p, i) => { if (p > best) { best = p; winIdx = i; } });
+    scratchState.winIdx = winIdx;
+    renderScratch();
+    document.getElementById('scratch-status').textContent = `${players[winIdx].name} wins with $${best}!`;
+    setTimeout(() => showWinner(players[winIdx].name, () => launchGame('scratch')), 1000);
+  }
+}
+
+// ═══════════════════════════════════════════
+// KENO
+// ═══════════════════════════════════════════
+let kenoState = {};
+function kenoInit() {
+  const totalNums = 40;
+  const numsPerPlayer = 4;
+  const allNums = Array.from({ length: totalNums }, (_, i) => i + 1);
+  const shuffled = [...allNums].sort(() => Math.random() - 0.5);
+  const assignments = players.map((p, i) => shuffled.slice(i * numsPerPlayer, (i + 1) * numsPerPlayer).sort((a, b) => a - b));
+  kenoState = { totalNums, assignments, drawn: new Set(), drawOrder: [...allNums].sort(() => Math.random() - 0.5), drawIdx: 0, done: false, timer: null };
+  renderKeno();
+  document.getElementById('keno-status').textContent = 'Press Start to begin drawing numbers!';
+  document.getElementById('keno-btn').disabled = false;
+}
+function renderKeno() {
+  const board = document.getElementById('keno-board');
+  const allPlayerNums = new Set(kenoState.assignments.flat());
+  board.innerHTML = Array.from({ length: kenoState.totalNums }, (_, i) => {
+    const num = i + 1;
+    let cls = 'keno-num';
+    if (kenoState.drawn.has(num)) cls += ' drawn';
+    if (allPlayerNums.has(num)) cls += ' player-num';
+    return `<div class="${cls}">${num}</div>`;
+  }).join('');
+  document.getElementById('keno-players').innerHTML = players.map((p, i) => {
+    const nums = kenoState.assignments[i];
+    const matched = nums.filter(n => kenoState.drawn.has(n)).length;
+    const isWinner = kenoState.done && matched === nums.length;
+    return `<div class="keno-player ${isWinner ? 'winner' : ''}"><div class="kp-name" style="color:${p.color}">${escapeHtml(p.name)} (${matched}/${nums.length})</div><div class="kp-nums">${nums.map(n => `<span class="${kenoState.drawn.has(n) ? 'matched' : ''}">${n}</span>`).join(' ')}</div></div>`;
+  }).join('');
+}
+function kenoStart() {
+  document.getElementById('keno-btn').disabled = true;
+  kenoState.timer = setInterval(() => {
+    if (kenoState.drawIdx >= kenoState.drawOrder.length || kenoState.done) { clearInterval(kenoState.timer); return; }
+    const num = kenoState.drawOrder[kenoState.drawIdx++];
+    kenoState.drawn.add(num);
+    playTick(0.1);
+    renderKeno();
+    document.getElementById('keno-status').textContent = `Number ${num} drawn!`;
+    for (let i = 0; i < players.length; i++) {
+      if (kenoState.assignments[i].every(n => kenoState.drawn.has(n))) {
+        kenoState.done = true;
+        clearInterval(kenoState.timer);
+        document.getElementById('keno-status').textContent = `${players[i].name} matches all numbers!`;
+        setTimeout(() => showWinner(players[i].name, () => launchGame('keno')), 1000);
+        return;
+      }
+    }
+  }, 500);
+}
+
+// ═══════════════════════════════════════════
+// TEXAS HOLD'EM (SIMPLIFIED)
+// ═══════════════════════════════════════════
+let holdemState = {};
+function holdemInit() {
+  holdemState = { phase: 'waiting' };
+  document.getElementById('holdem-community').innerHTML = '<span style="color:var(--text-muted)">Community cards appear here</span>';
+  document.getElementById('holdem-grid').innerHTML = '';
+  document.getElementById('holdem-status').textContent = 'Press Deal to play';
+  document.getElementById('holdem-actions').innerHTML = '<button class="btn btn-primary" onclick="holdemDeal()">Deal</button>';
+}
+function holdemHandRank(hand) {
+  const vals = hand.map(c => { if (c.rank === 'A') return 14; if (c.rank === 'K') return 13; if (c.rank === 'Q') return 12; if (c.rank === 'J') return 11; return parseInt(c.rank); }).sort((a,b) => b - a);
+  const suits = hand.map(c => c.suit);
+  const isFlush = suits.every(s => s === suits[0]);
+  const sorted = [...vals].sort((a,b) => a - b);
+  const isStraight = sorted.every((v, i) => i === 0 || v === sorted[i-1] + 1);
+  const counts = {};
+  vals.forEach(v => counts[v] = (counts[v] || 0) + 1);
+  const groups = Object.entries(counts).map(([v, c]) => ({ v: +v, c })).sort((a, b) => b.c - a.c || b.v - a.v);
+  let rank = 0, label = 'High Card';
+  if (isFlush && isStraight) { rank = 800; label = 'Straight Flush'; }
+  else if (groups[0].c === 4) { rank = 700; label = 'Four of a Kind'; }
+  else if (groups[0].c === 3 && groups[1] && groups[1].c === 2) { rank = 600; label = 'Full House'; }
+  else if (isFlush) { rank = 500; label = 'Flush'; }
+  else if (isStraight) { rank = 400; label = 'Straight'; }
+  else if (groups[0].c === 3) { rank = 300; label = 'Three of a Kind'; }
+  else if (groups[0].c === 2 && groups[1] && groups[1].c === 2) { rank = 200; label = 'Two Pair'; }
+  else if (groups[0].c === 2) { rank = 100; label = 'Pair'; }
+  return { score: rank + groups[0].v + vals[0] * 0.01, label };
+}
+function holdemBest5(hole, community) {
+  const all = [...hole, ...community];
+  let best = { score: -1, label: '', cards: [] };
+  for (let i = 0; i < all.length; i++) for (let j = i+1; j < all.length; j++) for (let k = j+1; k < all.length; k++) for (let l = k+1; l < all.length; l++) for (let m = l+1; m < all.length; m++) {
+    const hand = [all[i], all[j], all[k], all[l], all[m]];
+    const r = holdemHandRank(hand);
+    if (r.score > best.score) best = { ...r, cards: hand };
+  }
+  return best;
+}
+function holdemDeal() {
+  const deck = bjCreateDeck();
+  const playerHands = players.map(() => [deck.pop(), deck.pop()]);
+  const community = [deck.pop(), deck.pop(), deck.pop(), deck.pop(), deck.pop()];
+  holdemState = { playerHands, community, revealed: 0, phase: 'preflop' };
+  document.getElementById('holdem-community').innerHTML = community.map(() => '<div class="card face-down"></div>').join('');
+  document.getElementById('holdem-grid').innerHTML = players.map((p, i) => `<div class="holdem-slot"><div class="pname" style="color:${p.color}">${escapeHtml(p.name)}</div><div class="bacc-hand">${playerHands[i].map(c => bjCardHtml(c)).join('')}</div></div>`).join('');
+  document.getElementById('holdem-status').textContent = 'Cards dealt! Reveal the flop.';
+  document.getElementById('holdem-actions').innerHTML = '<button class="btn btn-primary" onclick="holdemReveal()">Reveal Flop</button>';
+}
+function holdemReveal() {
+  const comm = document.getElementById('holdem-community');
+  if (holdemState.phase === 'preflop') {
+    holdemState.revealed = 3; holdemState.phase = 'flop';
+    document.getElementById('holdem-status').textContent = 'The Flop! Reveal the Turn.';
+    document.getElementById('holdem-actions').innerHTML = '<button class="btn btn-primary" onclick="holdemReveal()">Reveal Turn</button>';
+  } else if (holdemState.phase === 'flop') {
+    holdemState.revealed = 4; holdemState.phase = 'turn';
+    document.getElementById('holdem-status').textContent = 'The Turn! Reveal the River.';
+    document.getElementById('holdem-actions').innerHTML = '<button class="btn btn-primary" onclick="holdemReveal()">Reveal River</button>';
+  } else if (holdemState.phase === 'turn') {
+    holdemState.revealed = 5; holdemState.phase = 'river';
+    document.getElementById('holdem-status').textContent = 'The River! Show results.';
+    document.getElementById('holdem-actions').innerHTML = '<button class="btn btn-primary" onclick="holdemShowdown()">Showdown</button>';
+  }
+  comm.innerHTML = holdemState.community.map((c, i) => i < holdemState.revealed ? bjCardHtml(c) : '<div class="card face-down"></div>').join('');
+}
+function holdemShowdown() {
+  const results = players.map((p, i) => ({ ...p, idx: i, ...holdemBest5(holdemState.playerHands[i], holdemState.community) }));
+  results.sort((a, b) => b.score - a.score);
+  const winner = results[0];
+  document.getElementById('holdem-grid').innerHTML = players.map((p, i) => {
+    const r = results.find(x => x.idx === i);
+    const isWin = r.idx === winner.idx;
+    return `<div class="holdem-slot ${isWin ? 'winner' : ''}"><div class="pname" style="color:${p.color}">${escapeHtml(p.name)}</div><div class="bacc-hand">${holdemState.playerHands[i].map(c => bjCardHtml(c)).join('')}</div><div class="hand-rank">${r.label}</div></div>`;
+  }).join('');
+  document.getElementById('holdem-status').textContent = `${winner.name} wins with ${winner.label}!`;
+  document.getElementById('holdem-actions').innerHTML = '<button class="btn btn-primary" onclick="holdemDeal()">Deal Again</button>';
+  setTimeout(() => showWinner(winner.name, () => launchGame('holdem')), 1200);
+}
+
+// ═══════════════════════════════════════════
+// BACCARAT
+// ═══════════════════════════════════════════
+function baccInit() {
+  document.getElementById('bacc-grid').innerHTML = '';
+  document.getElementById('bacc-status').textContent = 'Press Deal to play';
+  document.getElementById('bacc-btn').disabled = false;
+}
+function baccCardVal(card) {
+  if (['K','Q','J','10'].includes(card.rank)) return 0;
+  if (card.rank === 'A') return 1;
+  return parseInt(card.rank);
+}
+function baccDeal() {
+  const deck = bjCreateDeck();
+  const hands = players.map(() => [deck.pop(), deck.pop()]);
+  const scores = hands.map(h => (baccCardVal(h[0]) + baccCardVal(h[1])) % 10);
+  let best = Math.max(...scores);
+  // Closest to 9
+  let bestDist = 10, winIdx = [];
+  scores.forEach((s, i) => {
+    const dist = 9 - s;
+    if (dist < bestDist) { bestDist = dist; winIdx = [i]; }
+    else if (dist === bestDist) winIdx.push(i);
+  });
+  const wi = winIdx[Math.floor(Math.random() * winIdx.length)];
+  document.getElementById('bacc-grid').innerHTML = players.map((p, i) => {
+    return `<div class="bacc-slot ${i === wi ? 'winner' : ''}"><div class="pname" style="color:${p.color}">${escapeHtml(p.name)}</div><div class="bacc-hand">${hands[i].map(c => bjCardHtml(c)).join('')}</div><div class="bacc-score">${scores[i]}</div></div>`;
+  }).join('');
+  document.getElementById('bacc-status').textContent = `${players[wi].name} wins with ${scores[wi]}!`;
+  setTimeout(() => showWinner(players[wi].name, () => launchGame('baccarat')), 1200);
+}
+
+// ═══════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════
+renderPlayers();
+</script>
+</body>
+</html>
