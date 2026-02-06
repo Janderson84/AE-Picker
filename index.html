@@ -1629,7 +1629,7 @@ function initPlinko() {
   const W = canvas.width, H = canvas.height;
 
   // Build pegs
-  const rows = 12;
+  const rows = 8;
   const pegRadius = 5;
   const startY = 40;
   const endY = H - 50;
@@ -1716,7 +1716,7 @@ function plinkoDrop() {
   const { W, H, pegs, colSpacing } = plinkoState;
 
   const ball = {
-    x: W / 2 + (Math.random() - 0.5) * 20,
+    x: 60 + Math.random() * (W - 120),
     y: 10,
     vx: 0,
     vy: 0,
@@ -1743,7 +1743,7 @@ function plinkoDrop() {
         ball.x = peg.x + Math.cos(angle) * minDist;
         ball.y = peg.y + Math.sin(angle) * minDist;
         const speed = Math.sqrt(ball.vx * ball.vx + ball.vy * ball.vy);
-        ball.vx = Math.cos(angle) * speed * bounciness + (Math.random() - 0.5) * 1.5;
+        ball.vx = Math.cos(angle) * speed * bounciness + (Math.random() - 0.5) * 3.0;
         ball.vy = Math.sin(angle) * speed * bounciness;
         if (ball.vy < 0.5) ball.vy = 0.5;
         playTick(Math.min(0.15, speed * 0.03));
