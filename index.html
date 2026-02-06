@@ -559,32 +559,15 @@ body::before {
 }
 
 /* ═══════════════════════════════════════════
-   WINNER OVERLAY
+   WINNER BANNER (inline below game)
    ═══════════════════════════════════════════ */
-.winner-overlay {
-  display: none;
-  position: fixed;
-  inset: 0;
-  z-index: 1000;
-  background: radial-gradient(ellipse at center, rgba(10, 14, 19, 0.72) 0%, rgba(10, 14, 19, 0.45) 100%);
-  backdrop-filter: blur(3px);
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-}
-
-.winner-overlay.active {
-  display: flex;
-  animation: fadeIn 0.5s ease;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-.winner-content {
+.winner-banner {
   text-align: center;
+  margin-top: 18px;
+  padding: 20px 16px 18px;
+  background: linear-gradient(135deg, rgba(255,215,0,0.08), rgba(255,215,0,0.03));
+  border: 1px solid var(--gold);
+  border-radius: var(--radius-lg);
   animation: winnerPop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
@@ -593,34 +576,30 @@ body::before {
   to { transform: scale(1); opacity: 1; }
 }
 
-.winner-label {
-  font-size: 0.9rem;
+.winner-banner .winner-label {
+  font-size: 0.8rem;
   text-transform: uppercase;
   letter-spacing: 0.2em;
   color: var(--gold);
   font-weight: 600;
-  margin-bottom: 16px;
+  margin-bottom: 8px;
 }
 
-.winner-name {
+.winner-banner .winner-name {
   font-family: var(--font-display);
-  font-size: clamp(3rem, 8vw, 6rem);
+  font-size: clamp(1.8rem, 5vw, 3rem);
   font-weight: 900;
   line-height: 1;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   background: linear-gradient(135deg, var(--gold), #fff, var(--gold));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 0 30px var(--gold-glow));
+  filter: drop-shadow(0 0 20px var(--gold-glow));
 }
 
-.winner-sub {
-  font-size: 1.1rem;
-  color: var(--text-secondary);
-  margin-bottom: 40px;
+.winner-banner .winner-actions {
+  display: flex; gap: 12px; justify-content: center; margin-top: 14px;
 }
-
-.winner-actions { display: flex; gap: 12px; justify-content: center; }
 
 /* Confetti canvas */
 #confetti-canvas {
@@ -1008,6 +987,7 @@ body::before {
 .bracket-round { display:flex; flex-direction:column; gap:8px; align-items:center; margin-bottom:20px; }
 .bracket-match { display:flex; align-items:center; gap:8px; background:var(--bg-secondary); border:1px solid var(--border); border-radius:var(--radius-md); padding:10px 16px; }
 .bracket-vs { color:var(--text-muted); font-size:0.75rem; font-weight:600; }
+.bracket-side { font-size:0.6rem; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; opacity:0.5; }
 .bracket-name { font-weight:600; font-size:0.9rem; padding:4px 8px; border-radius:4px; }
 .bracket-name.winner { background:var(--green-primary); color:var(--bg-deep); }
 .bracket-name.loser { opacity:0.3; text-decoration:line-through; }
@@ -1432,19 +1412,8 @@ body::before {
     </div></div>
   </div>
 
-  <!-- ═══════════ WINNER OVERLAY ═══════════ -->
+  <!-- confetti canvas (no overlay) -->
   <canvas id="confetti-canvas"></canvas>
-  <div class="winner-overlay" id="winner-overlay">
-    <div class="winner-content">
-      <div class="winner-label">🏆 Today's Chosen Rep</div>
-      <div class="winner-name" id="winner-name"></div>
-      <div class="winner-sub">Time to shine in the spotlight!</div>
-      <div class="winner-actions">
-        <button class="btn btn-primary" onclick="closeWinner()">Back to Lobby</button>
-        <button class="btn btn-secondary" id="winner-replay-btn">Play Again</button>
-      </div>
-    </div>
-  </div>
 </div>
 
 <script>
@@ -1544,21 +1513,41 @@ let confettiPieces = [];
 let confettiAnim = null;
 
 function showWinner(name, replayFn) {
-  document.getElementById('winner-name').textContent = name;
-  const overlay = document.getElementById('winner-overlay');
-  overlay.classList.add('active');
+  // Find the active game screen's game-center (or game-body) to append the banner
+  const activeScreen = document.querySelector('.screen.active') || document.querySelector('.screen[style*="display"]');
+  if (!activeScreen) return;
 
-  const replayBtn = document.getElementById('winner-replay-btn');
-  replayBtn.onclick = () => {
-    closeWinner();
+  // Remove any existing banner
+  const old = activeScreen.querySelector('.winner-banner');
+  if (old) old.remove();
+
+  const banner = document.createElement('div');
+  banner.className = 'winner-banner';
+  banner.innerHTML = `
+    <div class="winner-label">🏆 Today's Chosen Rep</div>
+    <div class="winner-name">${escapeHtml(name)}</div>
+    <div class="winner-actions">
+      <button class="btn btn-primary" onclick="clearWinnerAndLobby()">Back to Lobby</button>
+      <button class="btn btn-secondary" id="winner-replay-btn">Play Again</button>
+    </div>`;
+
+  // Append inside game-center if it exists, otherwise game-body
+  const target = activeScreen.querySelector('.game-center') || activeScreen.querySelector('.game-body') || activeScreen;
+  target.appendChild(banner);
+
+  banner.querySelector('#winner-replay-btn').onclick = () => {
+    banner.remove();
+    stopConfetti();
     if (replayFn) replayFn();
   };
 
+  banner.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   startConfetti();
 }
 
-function closeWinner() {
-  document.getElementById('winner-overlay').classList.remove('active');
+function clearWinnerAndLobby() {
+  const banner = document.querySelector('.winner-banner');
+  if (banner) banner.remove();
   stopConfetti();
   showScreen('lobby');
 }
@@ -2468,7 +2457,7 @@ function renderBracket() {
     return `<div class="bj-section-label">${label}</div><div class="bracket-round">${round.map(m => {
       const aClass = m.winner === m.a ? 'winner' : (m.winner && m.winner !== m.a ? 'loser' : '');
       const bClass = m.b === null ? 'bye' : (m.winner === m.b ? 'winner' : (m.winner && m.winner !== m.b ? 'loser' : ''));
-      return `<div class="bracket-match"><span class="bracket-name ${aClass}">${escapeHtml(m.a)}</span><span class="bracket-vs">${m.b ? 'vs' : 'BYE'}</span><span class="bracket-name ${bClass}">${m.b ? escapeHtml(m.b) : '—'}</span></div>`;
+      return `<div class="bracket-match"><div style="text-align:center"><span class="bracket-name ${aClass}">${escapeHtml(m.a)}</span>${m.b ? '<div class="bracket-side">Tails</div>' : ''}</div><span class="bracket-vs">${m.b ? 'vs' : 'BYE'}</span><div style="text-align:center"><span class="bracket-name ${bClass}">${m.b ? escapeHtml(m.b) : '—'}</span>${m.b ? '<div class="bracket-side">Heads</div>' : ''}</div></div>`;
     }).join('')}</div>`;
   }).join('');
 }
@@ -2508,10 +2497,11 @@ function coinflipNext() {
   setTimeout(() => {
     cfState.flipping = false;
     coin.classList.remove('flipping');
-    m.winner = Math.random() < 0.5 ? m.a : m.b;
-    coin.textContent = m.winner === m.a ? '👑' : '👑';
+    const isTails = Math.random() < 0.5;
+    m.winner = isTails ? m.a : m.b;
+    coin.textContent = isTails ? 'T' : 'H';
     renderBracket();
-    document.getElementById('coinflip-status').textContent = `${m.winner} wins this match!`;
+    document.getElementById('coinflip-status').textContent = `${isTails ? 'Tails' : 'Heads'}! ${m.winner} wins!`;
     cfState.currentMatch++;
     document.getElementById('coinflip-btn').disabled = false;
   }, 1500);
